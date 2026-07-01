@@ -15,9 +15,24 @@ exports.createPayment = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Please provide a booking ID' });
     }
 
-    // Basic mock card validation
-    if (!cardNumber || !cardExpiry || !cardCvc) {
-      return res.status(400).json({ success: false, error: 'Please provide card details (simulated Stripe checkout)' });
+    if (!cardNumber) {
+      return res.status(400).json({ success: false, error: 'Please provide payment details' });
+    }
+
+    // Check payment gateway method
+    let transactionId = '';
+    if (cardNumber === 'PAY_ON_SITE') {
+      transactionId = 'site_' + Math.random().toString(36).substring(2, 15);
+    } else if (cardNumber === 'UPI_PAYMENT') {
+      transactionId = 'upi_' + Math.random().toString(36).substring(2, 15);
+    } else if (cardNumber === 'NET_BANKING') {
+      transactionId = 'nb_' + Math.random().toString(36).substring(2, 15);
+    } else {
+      // Basic mock card check
+      if (!cardExpiry || !cardCvc) {
+        return res.status(400).json({ success: false, error: 'Please provide card expiration date and CVC code' });
+      }
+      transactionId = 'pi_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     }
 
     // Fetch booking
@@ -47,8 +62,6 @@ exports.createPayment = async (req, res, next) => {
     }
 
     // Simulate payment processing (Stripe-like)
-    const transactionId = 'pi_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    
     const payment = await Payment.create({
       student: req.user.id,
       room: booking.room._id,

@@ -6,6 +6,7 @@ let roomsCache = [];
 let occupancyChartInstance = null;
 let selectedStayType = 'couple'; // Default
 let promoValidationWarning = '';
+let resortMapInstance = null;
 
 // DOM Elements
 const authView = document.getElementById('auth-view');
@@ -94,11 +95,25 @@ const bookingModalBreakdown = document.getElementById('booking-modal-breakdown')
 const addRoomModal = document.getElementById('add-room-modal');
 const addRoomForm = document.getElementById('add-room-form');
 
+// Multi-pane Payment Gateway Modals DOM
 const paymentModal = document.getElementById('payment-modal');
-const paymentRoomNum = document.getElementById('payment-room-num');
 const paymentAmountDisplay = document.getElementById('payment-amount-display');
+const paymentRoomSummary = document.getElementById('payment-room-summary');
 const paymentAllocationId = document.getElementById('payment-allocation-id');
 const paymentCheckoutForm = document.getElementById('payment-checkout-form');
+const paymentModalStepLabel = document.getElementById('payment-modal-step-label');
+
+const paymentGatewaySelectPane = document.getElementById('payment-gateway-select-pane');
+const paymentCardPane = document.getElementById('payment-card-pane');
+const paymentUpiPane = document.getElementById('payment-upi-pane');
+const paymentNetbankingPane = document.getElementById('payment-netbanking-pane');
+const paymentSitePane = document.getElementById('payment-site-pane');
+
+const paymentUpiForm = document.getElementById('payment-upi-form');
+const paymentNetbankingForm = document.getElementById('payment-netbanking-form');
+const bankSelector = document.getElementById('bank-selector');
+const bankLoginFields = document.getElementById('bank-login-fields');
+const selectedBankTitle = document.getElementById('selected-bank-title');
 
 // Thank You Overlay DOM
 const thankYouOverlay = document.getElementById('thank-you-overlay');
@@ -228,6 +243,8 @@ function switchView(viewId) {
     updatePointsUI();
   } else if (viewId === 'contact-view') {
     renderReviewsWall();
+  } else if (viewId === 'location-view') {
+    initResortMap();
   }
 }
 
@@ -480,9 +497,11 @@ function setupEventListeners() {
   });
 
   // Quick Manager Add Room Button
-  quickAddRoomBtn.addEventListener('click', () => openModal('add-room-modal'));
+  if (quickAddRoomBtn) {
+    quickAddRoomBtn.addEventListener('click', () => openModal('add-room-modal'));
+  }
 
-  // Checkout Payment Form
+  // Checkout Card Form Submit
   paymentCheckoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const allocationId = paymentAllocationId.value;
@@ -503,19 +522,7 @@ function setupEventListeners() {
       const data = await res.json();
       if (data.success) {
         alert('Payment completed successfully! Official PDF invoice generated. You earned 500 Loyalty Bonus Points!');
-        
-        addConciergeNotification(
-          '📧 Payment Invoice Confirmed',
-          `Stay billing finalized. Paid copy of invoice and electronic room keys sent to ${currentUser.email}.`
-        );
-        addConciergeNotification(
-          '🎁 Loyalty Bonus points Credited',
-          `500 Gold Club bonus points successfully added to your loyalty balance.`
-        );
-
-        closeModal('payment-modal');
-        paymentCheckoutForm.reset();
-        loadDashboardData();
+        finalizePaymentSuccess();
       } else {
         alert(data.error || 'Payment failed.');
       }
@@ -526,7 +533,171 @@ function setupEventListeners() {
       payBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pay Securely Now`;
     }
   });
+
+  // UPI Form Submit Handler
+  paymentUpiForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const allocationId = paymentAllocationId.value;
+    const upiId = document.getElementById('upi-vpa').value;
+    
+    const payBtn = document.getElementById('upi-pay-button');
+    payBtn.disabled = true;
+    payBtn.innerHTML = `Authorizing UPI Pay...`;
+
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/payments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ allocationId, cardNumber: 'UPI_PAYMENT', cardExpiry: '12/99', cardCvc: '000' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`UPI Transfer of ${paymentAmountDisplay.textContent} from ${upiId} Successful!`);
+          finalizePaymentSuccess();
+        } else {
+          alert(data.error || 'UPI Authorization failed.');
+        }
+      } catch (err) {
+        alert('Error connecting to UPI gateway.');
+      } finally {
+        payBtn.disabled = false;
+        payBtn.innerHTML = `Verify & Pay UPI`;
+      }
+    }, 2000);
+  });
+
+  // Net Banking Form Submit Handler
+  paymentNetbankingForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const allocationId = paymentAllocationId.value;
+    const bank = bankSelector.value;
+    
+    const payBtn = document.getElementById('nb-pay-button');
+    payBtn.disabled = true;
+    payBtn.innerHTML = `Connecting Bank Server...`;
+
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/payments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ allocationId, cardNumber: 'NET_BANKING', cardExpiry: '12/99', cardCvc: '000' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`Internet Banking Authentication Successful via HDFC/Chase!`);
+          finalizePaymentSuccess();
+        } else {
+          alert(data.error || 'Net Banking failed.');
+        }
+      } catch (err) {
+        alert('Net Banking server timeout.');
+      } finally {
+        payBtn.disabled = false;
+        payBtn.innerHTML = `Proceed to Bank Login`;
+      }
+    }, 2500);
+  });
+
+  // Bank dropdown select updates
+  bankSelector.addEventListener('change', () => {
+    if (bankSelector.value) {
+      selectedBankTitle.textContent = `${bankSelector.options[bankSelector.selectedIndex].text} Secure Portal Login`;
+      bankLoginFields.style.display = 'block';
+    } else {
+      bankLoginFields.style.display = 'none';
+    }
+  });
 }
+
+// Finalize successful payment transitions
+function finalizePaymentSuccess() {
+  addConciergeNotification(
+    '📧 Payment Invoice Confirmed',
+    `Stay billing finalized. Paid copy of invoice and electronic room keys sent to ${currentUser.email}.`
+  );
+  addConciergeNotification(
+    '🎁 Loyalty Bonus points Credited',
+    `500 Gold Club bonus points successfully added to your loyalty balance.`
+  );
+
+  closeModal('payment-modal');
+  paymentCheckoutForm.reset();
+  paymentUpiForm.reset();
+  paymentNetbankingForm.reset();
+  bankLoginFields.style.display = 'none';
+  loadDashboardData();
+}
+
+// Action: Submit Pay on Site Temporary reservation
+window.submitPayOnSiteBooking = async function() {
+  const allocationId = paymentAllocationId.value;
+  const payBtn = document.getElementById('site-pay-button');
+  
+  payBtn.disabled = true;
+  payBtn.innerHTML = `Processing Site Reservation...`;
+
+  setTimeout(async () => {
+    try {
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allocationId, cardNumber: 'PAY_ON_SITE', cardExpiry: '12/99', cardCvc: '000' })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('Temporary reservation successfully locked! Settle billing charges upon arrival at resort.');
+        
+        addConciergeNotification(
+          '🏨 Room Secured (Pay on Site)',
+          `Temporary stay allocation confirmed for Room. Total due: ${paymentAmountDisplay.textContent} payable at front desk.`
+        );
+        addConciergeNotification(
+          '🎁 Loyalty Bonus points Credited',
+          `500 Gold Club bonus points successfully added to your loyalty balance.`
+        );
+
+        closeModal('payment-modal');
+        loadDashboardData();
+      } else {
+        alert(data.error || 'Failed to lock temporary hold.');
+      }
+    } catch (err) {
+      alert('Error connecting to stay ledger.');
+    } finally {
+      payBtn.disabled = false;
+      payBtn.innerHTML = `Confirm Hold Reservation`;
+    }
+  }, 2000);
+};
+
+// Toggle Payment Gateway Panes (Credit Card, UPI, Net Banking, Pay on Site)
+window.switchPaymentPane = function(paneId) {
+  paymentGatewaySelectPane.style.display = 'none';
+  paymentCardPane.style.display = 'none';
+  paymentUpiPane.style.display = 'none';
+  paymentNetbankingPane.style.display = 'none';
+  paymentSitePane.style.display = 'none';
+
+  if (paneId === 'gateway') {
+    paymentGatewaySelectPane.style.display = 'block';
+    paymentModalStepLabel.textContent = '➔ Payment Gateway';
+  } else if (paneId === 'card') {
+    paymentCardPane.style.display = 'block';
+    paymentModalStepLabel.textContent = '➔ Card Checkout';
+  } else if (paneId === 'upi') {
+    paymentUpiPane.style.display = 'block';
+    paymentModalStepLabel.textContent = '➔ UPI Checkout';
+  } else if (paneId === 'netbanking') {
+    paymentNetbankingPane.style.display = 'block';
+    paymentModalStepLabel.textContent = '➔ Bank Transfer';
+  } else if (paneId === 'site') {
+    paymentSitePane.style.display = 'block';
+    paymentModalStepLabel.textContent = '➔ Reserve Room';
+  }
+};
 
 // Fullscreen Thank You Countdown Helper
 function showThankYouOverlay(icon, title, message, formToReset) {
@@ -1135,7 +1306,7 @@ async function loadDashboardData() {
   if (!currentUser) return;
 
   if (currentUser.role === 'manager') {
-    // 1. Fetch Manager Analytics
+    // Manager Analytics
     try {
       const res = await fetch('/api/payments/analytics');
       const data = await res.json();
@@ -1154,7 +1325,7 @@ async function loadDashboardData() {
       console.error('Error fetching analytics:', err);
     }
 
-    // 2. Fetch Pending Bookings
+    // Fetch Pending Bookings
     try {
       const res = await fetch('/api/allocations');
       const data = await res.json();
@@ -1272,6 +1443,8 @@ async function loadDashboardData() {
           const isPaid = payData.data && payData.data.some(p => p.room._id === currentUser.allocatedRoom._id && p.status === 'completed');
           const approvedAlloc = allocData.data.find(a => a.room._id === currentUser.allocatedRoom._id && a.status === 'approved');
 
+          const isPayOnSite = payData.data && payData.data.some(p => p.room._id === currentUser.allocatedRoom._id && p.transactionId.startsWith('site_'));
+
           allocStatusHtml = `
             <div class="stat-card">
               <span class="stat-label">Stay Allocation</span>
@@ -1280,8 +1453,8 @@ async function loadDashboardData() {
             </div>
             <div class="stat-card">
               <span class="stat-label">Payment Status</span>
-              <span class="stat-value" style="color: ${isPaid ? 'var(--success)' : 'var(--danger)'};">${isPaid ? 'PAID' : 'DUE'}</span>
-              <span class="stat-desc">${isPaid ? 'All charges settled' : 'Payment required to secure stay'}</span>
+              <span class="stat-value" style="color: ${isPaid ? 'var(--success)' : 'var(--danger)'};">${isPaid ? (isPayOnSite ? 'PAY ON SITE' : 'PAID') : 'DUE'}</span>
+              <span class="stat-desc">${isPaid ? (isPayOnSite ? 'Pay at Front Desk' : 'All charges settled') : 'Payment required to secure stay'}</span>
             </div>
           `;
 
@@ -1301,7 +1474,7 @@ async function loadDashboardData() {
           const optionsStr = optionsList.length > 0 ? optionsList.join('<br>• ') : 'None';
 
           mainContentHtml = `
-            <div class="chart-container" style="padding: 2.5rem; display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+            <div class="chart-container" style="padding: 2.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
               <div>
                 <h2 style="color:var(--primary);">Your Stay Details</h2>
                 <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; line-height: 1.6;">
@@ -1315,14 +1488,16 @@ async function loadDashboardData() {
               <div style="border-left: 1px solid var(--glass-border); padding-left: 2rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
                 ${isPaid ? `
                   <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="margin-bottom: 1rem;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <h3 style="margin-bottom:0.5rem; color: var(--success);">Charges Settled</h3>
-                  <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1.5rem;">Your stay is fully secured. View or download your invoice receipt below.</p>
+                  <h3 style="margin-bottom:0.5rem; color: var(--success);">${isPayOnSite ? 'Booking Secured' : 'Charges Settled'}</h3>
+                  <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+                    ${isPayOnSite ? 'Your room is reserved. Settle billing charges upon check-in.' : 'Your stay is fully secured. View or download your invoice receipt below.'}
+                  </p>
                   <button class="btn btn-secondary" onclick="switchView('payments-view')">View Receipt</button>
                 ` : `
                   <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" style="margin-bottom: 1rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   <h3 style="margin-bottom:0.5rem; color:var(--danger);">Payment Due</h3>
-                  <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1.5rem;">Please pay the total charge of $${approvedAlloc.totalPrice.toFixed(2)} to secure your stay.</p>
-                  <button class="btn btn-primary" onclick="openPaymentPortal('${approvedAlloc._id}', '${currentUser.allocatedRoom.roomNumber}', ${approvedAlloc.totalPrice})">Pay Securely Now</button>
+                  <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1.5rem;">Please select a gateway to settle the total charge of $${approvedAlloc.totalPrice.toFixed(2)}.</p>
+                  <button class="btn btn-primary" onclick="openPaymentPortal('${approvedAlloc._id}', '${currentUser.allocatedRoom.roomNumber}', ${approvedAlloc.totalPrice})">Select Payment Method</button>
                 `}
               </div>
             </div>
@@ -1652,13 +1827,25 @@ window.openRequestModal = function(roomId, roomNum, price, type) {
 // Action: Open Payment Portal Modal
 window.openPaymentPortal = function(allocationId, roomNum, totalPrice) {
   paymentAllocationId.value = allocationId;
-  paymentRoomNum.textContent = roomNum;
+  paymentRoomSummary.textContent = `Room Suite-${roomNum}`;
   paymentAmountDisplay.textContent = `$${totalPrice.toFixed(2)}`;
   
+  // reset cards
   document.getElementById('card-preview-number').textContent = '•••• •••• •••• ••••';
   document.getElementById('card-preview-name').textContent = currentUser.name.toUpperCase();
   document.getElementById('card-preview-expiry').textContent = 'MM/YY';
+  document.getElementById('upi-vpa').value = '';
+  bankSelector.value = '';
+  bankLoginFields.style.display = 'none';
+
+  // Settle Pay on site text
+  const siteValLabel = document.getElementById('payment-site-total-val');
+  if (siteValLabel) {
+    siteValLabel.textContent = `$${totalPrice.toFixed(2)}`;
+  }
   
+  // Open with Step 1 Gateway selector
+  switchPaymentPane('gateway');
   openModal('payment-modal');
 };
 
@@ -1732,9 +1919,17 @@ async function loadPayments() {
         paymentsTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No transaction records found.</td></tr>`;
       } else {
         paymentsTableBody.innerHTML = data.data.map(p => {
+          let badgeText = 'CARD';
+          if (p.transactionId.startsWith('site_')) badgeText = 'PAY ON SITE';
+          else if (p.transactionId.startsWith('upi_')) badgeText = 'UPI PAY';
+          else if (p.transactionId.startsWith('nb_')) badgeText = 'NET BANK';
+
           return `
             <tr>
-              <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${p.transactionId}</td>
+              <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">
+                ${p.transactionId}
+                <div style="font-size:0.7rem; color:var(--primary); font-weight:700; margin-top:0.2rem;">${badgeText}</div>
+              </td>
               <td>
                 <div style="font-weight:600;">${p.student.name}</div>
                 <div style="font-size:0.75rem; color:var(--text-muted);">${p.student.email}</div>
@@ -1764,6 +1959,48 @@ async function loadPayments() {
 window.downloadReceipt = function(paymentId) {
   window.open(`/api/payments/${paymentId}/receipt`, '_blank');
 };
+
+// =======================================================
+// REAL-TIME LEAFLET MAP INTEGRATION
+// =======================================================
+function initResortMap() {
+  if (resortMapInstance) {
+    // Force size invalidation so it draws correctly when display block becomes active
+    setTimeout(() => {
+      resortMapInstance.invalidateSize();
+    }, 100);
+    return;
+  }
+
+  // Verify Leaflet object is loaded
+  if (typeof L === 'undefined') {
+    console.warn('Leaflet is not loaded yet.');
+    return;
+  }
+
+  setTimeout(() => {
+    try {
+      resortMapInstance = L.map('resort-leaflet-map', {
+        zoomControl: true,
+        scrollWheelZoom: false
+      }).setView([33.9788, -118.4488], 15);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(resortMapInstance);
+
+      // Add popup marker
+      L.marker([33.9788, -118.4488]).addTo(resortMapInstance)
+        .bindPopup('<b style="color:#020617; font-size:0.9rem; font-family:\'Outfit\';">StayEase Luxury Resorts & Spa</b><br><span style="color:#475569; font-size:0.75rem;">77 Coastal Boulevard, Ocean Bay Marina, CA 90210</span>')
+        .openPopup();
+        
+      resortMapInstance.invalidateSize();
+    } catch (err) {
+      console.error('Error initializing Leaflet:', err);
+    }
+  }, 150);
+}
 
 // Expose switchView to window
 window.switchView = switchView;
