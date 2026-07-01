@@ -11,7 +11,7 @@ dotenv.config();
 const usersData = [
   {
     name: 'Resort Manager',
-    email: 'warden@stayease.com', // Keep same email for easy login
+    email: 'warden@stayease.com',
     password: 'password123',
     role: 'manager',
   },
@@ -86,7 +86,7 @@ const roomsData = [
     occupied: 0,
     price: 350,
     floor: 1,
-    amenities: ['King Bed', 'Ocean View', 'Private Balcony', 'Mini Bar', 'Coffee Maker', 'Jaccuzi'],
+    amenities: ['King Bed', 'Ocean View', 'Private Balcony', 'Mini Bar', 'Coffee Maker', 'Jacuzzi'],
   },
   {
     roomNumber: 'Suite-102',
@@ -160,12 +160,13 @@ const seedDB = async () => {
 
     console.log('Seeding an approved booking & payment for Alice...');
     
-    // Alice booked a couple stay for 2 nights with breakfast
     const nights = 2;
     const guestsCount = 2;
-    const basePrice = suite101.price * nights; // $700
-    const breakfastPrice = 20 * guestsCount * nights; // $80
-    const totalPrice = basePrice + breakfastPrice; // $780
+    // Alice booked a Deluxe Suite with breakfast package ($20/guest/night) and SUMMER15 discount (15% off)
+    let subtotal = suite101.price * nights; // $700
+    subtotal += 20 * guestsCount * nights; // Breakfast: $80
+    const discount = subtotal * 0.15; // $117
+    const totalPrice = subtotal - discount; // $663
 
     const booking = await Allocation.create({
       student: alice._id,
@@ -173,17 +174,20 @@ const seedDB = async () => {
       status: 'approved',
       stayType: 'couple',
       guestsCount,
-      extraBedding: false,
-      addOns: ['breakfast'],
+      extraBeddingType: 'none',
+      vacationPackage: 'breakfast',
+      promoCode: 'SUMMER15',
+      discountApplied: 15,
+      addOns: [],
       nights,
       totalPrice,
       requestDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       actionDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),  // 1 day ago
-      notes: 'Anniversary couple getaway stay.',
+      notes: 'Anniversary couple getaway stay. High floor preferred.',
     });
 
     // Update room occupancy & guest record
-    suite101.occupied = 2; // Occupied by 2 guests
+    suite101.occupied = 2; 
     await suite101.save();
 
     alice.allocatedRoom = suite101._id;
@@ -206,14 +210,17 @@ const seedDB = async () => {
     const bob = createdUsers.find(u => u.email === 'bob@stayease.com');
     const villa201 = createdRooms.find(r => r.roomNumber === 'Villa-201');
 
-    // Bob booked 3 nights for 4 guests with extra bedding, breakfast, and shuttle
+    // Bob booked 3 nights for 4 guests with extra bedding (rollaway bed: $50/night), all inclusive ($80/guest/night), and shuttle ($40)
+    // Applied MONSOON20 (20% off)
     const bobNights = 3;
     const bobGuests = 4;
-    let bobTotal = villa201.price * bobNights; // $1650
-    bobTotal += 30 * bobNights; // Extra bedding: $90
-    bobTotal += 20 * bobGuests * bobNights; // Breakfast: $240
-    bobTotal += 40; // Shuttle: $40
-    // Total = $2020
+    let bobSubtotal = villa201.price * bobNights; // $1650
+    bobSubtotal += 50 * bobNights; // Rollaway Bed: $150
+    bobSubtotal += 80 * bobGuests * bobNights; // All-Inclusive: $960
+    bobSubtotal += 40; // Shuttle: $40
+    // Subtotal = $2800
+    const bobDiscount = bobSubtotal * 0.20; // $560
+    const bobTotal = bobSubtotal - bobDiscount; // $2240
 
     await Allocation.create({
       student: bob._id,
@@ -221,12 +228,15 @@ const seedDB = async () => {
       status: 'pending',
       stayType: 'family',
       guestsCount: bobGuests,
-      extraBedding: true,
-      addOns: ['breakfast', 'shuttle'],
+      extraBeddingType: 'rollaway_bed',
+      vacationPackage: 'all_inclusive',
+      promoCode: 'MONSOON20',
+      discountApplied: 20,
+      addOns: ['shuttle'],
       nights: bobNights,
       totalPrice: bobTotal,
       requestDate: new Date(),
-      notes: 'Family vacation stay. Need the extra bed in the living area.',
+      notes: 'Family vacation. Need the rollaway bed setup before check-in.',
     });
 
     console.log('Database Seeding Completed Successfully!');

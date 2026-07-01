@@ -11,9 +11,9 @@ const generateReceiptPDF = (payment, res) => {
   // Stream PDF directly to the response
   doc.pipe(res);
 
-  // Colors
-  const primaryColor = '#8b5cf6'; // Violet / Purple
-  const secondaryColor = '#0f172a'; // Deep Slate / Black
+  // Colors - Luxurious Champagne Gold & Obsidian Deep Slate
+  const primaryColor = '#d97706'; // Warm Gold
+  const secondaryColor = '#062c22'; // Emerald Obsidian
   const textColor = '#334155'; // Slate Grey
   const lightGrey = '#f8fafc';
 
@@ -37,7 +37,7 @@ const generateReceiptPDF = (payment, res) => {
     .fillColor('#ffffff')
     .fontSize(14)
     .font('Helvetica-Bold')
-    .text('INVOICE RECEIPT', 380, 45, { align: 'right', width: 165 })
+    .text('OFFICIAL INVOICE', 380, 45, { align: 'right', width: 165 })
     .fontSize(8)
     .font('Helvetica')
     .text(`TXN: ${payment.transactionId}`, 380, 70, { align: 'right', width: 165 });
@@ -163,36 +163,59 @@ const generateReceiptPDF = (payment, res) => {
   // Table Body Rows
   let y = 475;
   const nights = booking.nights || 1;
+  const guests = booking.guestsCount || 1;
 
-  // Row 1: Room Rent
+  // 1. Suite base price
   doc
     .fillColor(textColor)
     .font('Helvetica')
-    .text(`${payment.room.type} Room Rate`, 60, y)
+    .text(`${payment.room.type} Room Charge`, 60, y)
     .text(`$${payment.room.price.toFixed(2)} x ${nights} night(s)`, 320, y)
     .text(`$${(payment.room.price * nights).toFixed(2)}`, 450, y, { align: 'right', width: 85 });
   y += 20;
 
-  // Row 2: Extra Bedding (if applicable)
-  if (booking.extraBedding) {
+  // 2. Extra Bedding/Mattress pricing
+  if (booking.extraBeddingType && booking.extraBeddingType !== 'none') {
+    let beddingLabel = 'Extra Mattress';
+    let beddingPrice = 0;
+    if (booking.extraBeddingType === 'single_mattress') {
+      beddingLabel = 'Single Mattress Add-on';
+      beddingPrice = 20;
+    } else if (booking.extraBeddingType === 'double_mattress') {
+      beddingLabel = 'Double Mattress Add-on';
+      beddingPrice = 35;
+    } else if (booking.extraBeddingType === 'rollaway_bed') {
+      beddingLabel = 'Extra Rollaway Bed';
+      beddingPrice = 50;
+    }
+    
     doc
-      .text('Extra Rollaway Bedding', 60, y)
-      .text(`$30.00 x ${nights} night(s)`, 320, y)
-      .text(`$${(30 * nights).toFixed(2)}`, 450, y, { align: 'right', width: 85 });
+      .text(beddingLabel, 60, y)
+      .text(`$${beddingPrice.toFixed(2)} x ${nights} night(s)`, 320, y)
+      .text(`$${(beddingPrice * nights).toFixed(2)}`, 450, y, { align: 'right', width: 85 });
     y += 20;
   }
 
-  // Row 3: Breakfast Add-on (if applicable)
-  if (booking.addOns.includes('breakfast')) {
-    const dailyBf = 20 * booking.guestsCount;
+  // 3. Vacation Package pricing
+  if (booking.vacationPackage && booking.vacationPackage !== 'room_only') {
+    let packageLabel = '';
+    let packagePrice = 0;
+    if (booking.vacationPackage === 'breakfast') {
+      packageLabel = 'Premium Breakfast Buffet (Daily)';
+      packagePrice = 20;
+    } else if (booking.vacationPackage === 'all_inclusive') {
+      packageLabel = 'All-Inclusive Resort Pass (Daily)';
+      packagePrice = 80;
+    }
+
     doc
-      .text('Premium Breakfast Buffet (Daily)', 60, y)
-      .text(`$20.00 x ${booking.guestsCount} guest(s) x ${nights} night(s)`, 320, y)
-      .text(`$${(dailyBf * nights).toFixed(2)}`, 450, y, { align: 'right', width: 85 });
+      .text(packageLabel, 60, y)
+      .text(`$${packagePrice.toFixed(2)} x ${guests} guest(s) x ${nights} night(s)`, 320, y)
+      .text(`$${(packagePrice * guests * nights).toFixed(2)}`, 450, y, { align: 'right', width: 85 });
     y += 20;
   }
 
-  // Row 4: Airport Shuttle (if applicable)
+  // 4. Flat Add-ons (Shuttle, Late Checkout)
   if (booking.addOns.includes('shuttle')) {
     doc
       .text('Roundtrip Airport Shuttle Transfer', 60, y)
@@ -201,12 +224,41 @@ const generateReceiptPDF = (payment, res) => {
     y += 20;
   }
 
-  // Row 5: Late Checkout (if applicable)
   if (booking.addOns.includes('lateCheckout')) {
     doc
       .text('Guaranteed Late Checkout (4:00 PM)', 60, y)
       .text('Flat One-time Service Fee', 320, y)
       .text('$30.00', 450, y, { align: 'right', width: 85 });
+    y += 20;
+  }
+
+  // Calculate Subtotal for Discount math
+  let subtotal = (payment.room.price * nights);
+  let bPrice = 0;
+  if (booking.extraBeddingType === 'single_mattress') bPrice = 20;
+  else if (booking.extraBeddingType === 'double_mattress') bPrice = 35;
+  else if (booking.extraBeddingType === 'rollaway_bed') bPrice = 50;
+  subtotal += bPrice * nights;
+
+  let pkgPrice = 0;
+  if (booking.vacationPackage === 'breakfast') pkgPrice = 20;
+  else if (booking.vacationPackage === 'all_inclusive') pkgPrice = 80;
+  subtotal += pkgPrice * guests * nights;
+
+  if (booking.addOns.includes('shuttle')) subtotal += 40;
+  if (booking.addOns.includes('lateCheckout')) subtotal += 30;
+
+  // 5. Promo Discount row
+  if (booking.discountApplied > 0) {
+    const discountVal = subtotal * (booking.discountApplied / 100);
+    
+    doc
+      .fillColor(primaryColor)
+      .font('Helvetica-Bold')
+      .text(`Promo Code: ${booking.promoCode} (${booking.discountApplied}% Off)`, 60, y)
+      .font('Helvetica')
+      .text(`Seasonal Discount Applied`, 320, y)
+      .text(`-$${discountVal.toFixed(2)}`, 450, y, { align: 'right', width: 85 });
     y += 20;
   }
 

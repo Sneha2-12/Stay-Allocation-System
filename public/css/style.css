@@ -1,20 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --bg-color: #030712;
-  --panel-bg: rgba(17, 24, 39, 0.7);
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --primary: #8b5cf6; /* Violet */
-  --primary-glow: rgba(139, 92, 246, 0.15);
-  --secondary: #ec4899; /* Pink */
-  --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+  --bg-color: #020617; /* Deep midnight obsidian */
+  --panel-bg: rgba(6, 44, 34, 0.75); /* Deep emerald green semi-transparent */
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --primary: #fbbf24; /* Rich Champagne Gold */
+  --primary-glow: rgba(251, 191, 36, 0.15);
+  --secondary: #10b981; /* Emerald Jade */
+  --accent-gradient: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); /* Gold/Amber gradient */
   --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --warning: #fbbf24;
+  --danger: #f43f5e;
   --sidebar-width: 260px;
   --radius-sm: 8px;
   --radius-md: 16px;
@@ -36,8 +36,8 @@ body {
   overflow-x: hidden;
   display: flex;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(217, 70, 239, 0.08) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(6, 78, 59, 0.25) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(217, 119, 6, 0.1) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
@@ -128,6 +128,24 @@ body {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Premium Styling for Dropdowns */
+select.form-control.select-dropdown {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.2rem center;
+  background-size: 1.2em;
+  padding-right: 2.5rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+select.form-control.select-dropdown option {
+  background-color: #0b251e;
+  color: var(--text-primary);
+  padding: 0.5rem;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -151,13 +169,14 @@ body {
 
 .btn-primary {
   background: var(--accent-gradient);
-  color: white;
-  box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.4);
+  color: #000000; /* Contrast black text for luxury gold buttons */
+  font-weight: 700;
+  box-shadow: 0 4px 14px 0 rgba(251, 191, 36, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(139, 92, 246, 0.6);
+  box-shadow: 0 6px 20px 0 rgba(251, 191, 36, 0.5);
 }
 
 .btn-secondary {
@@ -207,14 +226,14 @@ body {
 
 /* Sidebar */
 aside {
-  background: rgba(3, 7, 18, 0.8);
+  background: rgba(2, 6, 23, 0.9); /* Dark obsidian background */
   border-right: 1px solid var(--glass-border);
   padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  position: fixed;
-  width: var(--sidebar-width);
+  position: sticky;
+  top: 0;
   z-index: 10;
   backdrop-filter: blur(16px);
 }
@@ -287,12 +306,13 @@ aside {
 
 /* Main Content Area */
 main {
-  margin-left: var(--sidebar-width);
+  /* REMOVED layout bug: margin-left: var(--sidebar-width); */
   flex-grow: 1;
   padding: 2rem 3rem;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 header {
@@ -568,7 +588,7 @@ tr:hover td {
 }
 
 .stay-type-option.active {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(251, 191, 36, 0.1);
   border: 2px solid var(--primary);
   box-shadow: 0 0 15px -3px var(--primary-glow);
 }
@@ -607,7 +627,7 @@ tr:hover td {
 }
 
 .addon-checkbox-card:has(.addon-checkbox:checked) {
-  background: rgba(139, 92, 246, 0.06);
+  background: rgba(251, 191, 36, 0.06);
   border-color: var(--primary);
 }
 
@@ -623,20 +643,13 @@ tr:hover td {
   flex-grow: 1;
 }
 
-/* Roommate Matching View (Legacy Compatibility, adapted for recommendations) */
+/* Stay Planner Configuration Card */
 .preference-card {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   padding: 2rem;
   margin-bottom: 2.5rem;
-}
-
-.slider-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
 }
 
 /* Modal Styling */
@@ -659,7 +672,7 @@ tr:hover td {
 }
 
 .modal-content {
-  background: #0d0f1a;
+  background: #0b1c16; /* Emerald Obsidian */
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   width: 100%;
@@ -691,7 +704,7 @@ tr:hover td {
 
 /* Payment Portal Card Simulation */
 .payment-card-wrapper {
-  background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%);
+  background: linear-gradient(135deg, #0f2e25 0%, #3a2800 100%); /* Gold/Emerald gradient */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
   padding: 1.5rem;
@@ -711,7 +724,7 @@ tr:hover td {
   position: absolute;
   width: 200px;
   height: 200px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
   top: -50px;
   right: -50px;
 }
@@ -769,7 +782,7 @@ tr:hover td {
 }
 
 .filter-select option {
-  background: #0d0f1a;
+  background: #0b251e;
   color: var(--text-primary);
 }
 
@@ -782,7 +795,6 @@ tr:hover td {
     display: none;
   }
   main {
-    margin-left: 0;
     padding: 1.5rem;
   }
   .analytics-section {

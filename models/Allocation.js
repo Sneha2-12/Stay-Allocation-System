@@ -26,13 +26,23 @@ const AllocationSchema = new mongoose.Schema({
     required: true,
     min: 1,
   },
-  extraBedding: {
-    type: Boolean,
-    default: false,
+  extraBeddingType: {
+    type: String,
+    enum: ['none', 'single_mattress', 'double_mattress', 'rollaway_bed'],
+    default: 'none',
   },
-  addOns: {
-    type: [String],
-    default: [], // ['breakfast', 'shuttle', 'lateCheckout']
+  vacationPackage: {
+    type: String,
+    enum: ['room_only', 'breakfast', 'all_inclusive'],
+    default: 'room_only',
+  },
+  promoCode: {
+    type: String,
+    default: '',
+  },
+  discountApplied: {
+    type: Number, // Percentage discount, e.g. 15 for 15%
+    default: 0,
   },
   nights: {
     type: Number,

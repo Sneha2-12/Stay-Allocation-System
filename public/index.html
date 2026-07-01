@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StayEase - Luxury Resort & Stay Allocation System</title>
+  <title>StayEase - Premium Luxury Stay & Resort Allocation</title>
   <!-- Google Font & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
@@ -50,7 +50,7 @@
       </div>
       <div class="form-group">
         <label for="reg-role">Account Type</label>
-        <select id="reg-role" class="form-control">
+        <select id="reg-role" class="form-control select-dropdown">
           <option value="guest">Guest (Traveler)</option>
           <option value="manager">Manager (Resort Admin)</option>
         </select>
@@ -143,7 +143,7 @@
               <h3>Occupancy by Resort Wing</h3>
               <canvas id="occupancyChart" style="max-height: 250px;"></canvas>
             </div>
-            <!-- Popular Stay Types Widget -->
+            <!-- Quick actions -->
             <div class="chart-container" style="display: flex; flex-direction: column; justify-content: space-around;">
               <h3>Quick Administration</h3>
               <p style="color: var(--text-secondary); font-size: 0.9rem;">Review pending bookings, verify guest configurations, and manage resort rooms.</p>
@@ -159,7 +159,7 @@
                 <tr>
                   <th>Guest Name</th>
                   <th>Stay Config</th>
-                  <th>Selected Add-Ons</th>
+                  <th>Selected Options</th>
                   <th>Total Price</th>
                   <th>Actions</th>
                 </tr>
@@ -175,6 +175,49 @@
 
         <!-- GUEST DASHBOARD CONTENT -->
         <div id="student-dashboard" class="role-dashboard" style="display: none;">
+          
+          <!-- Seasonal Deals Carousel/Grid -->
+          <h3 style="margin-bottom: 1rem;">Exclusive Seasonal Offers</h3>
+          <div class="offers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+            
+            <div class="offer-card" style="background: linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(2, 44, 34, 0.6) 100%); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 140px; position: relative; overflow: hidden;">
+              <div style="position:absolute; top:-10px; right:-10px; font-size:4rem; opacity:0.1; transform: rotate(15deg);">🌴</div>
+              <div>
+                <div style="font-weight:800; font-size:1.15rem; color:var(--primary); margin-bottom:0.25rem;">Summer Getaway (15% Off)</div>
+                <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">Unwind on the golden beaches. Get 15% discount on all luxury suites & stays.</p>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
+                <span style="font-family:monospace; font-size:0.8rem; background:rgba(251, 191, 36, 0.1); padding:0.25rem 0.5rem; border-radius:var(--radius-sm); border:1px solid rgba(251, 191, 36, 0.2); color:var(--primary); font-weight:700;">Code: SUMMER15</span>
+                <span style="font-size:0.75rem; color:var(--success); font-weight:600;">Active Now</span>
+              </div>
+            </div>
+
+            <div class="offer-card" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 140px; position: relative; overflow: hidden;">
+              <div style="position:absolute; top:-10px; right:-10px; font-size:4rem; opacity:0.1; transform: rotate(15deg);">❄️</div>
+              <div>
+                <div style="font-weight:800; font-size:1.15rem; color:#93c5fd; margin-bottom:0.25rem;">Winter Escape (10% Off)</div>
+                <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">Cozy up in our heated mountain penthouses. 10% off with premium complimentary fireplace setup.</p>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
+                <span style="font-family:monospace; font-size:0.8rem; background:rgba(147, 197, 253, 0.1); padding:0.25rem 0.5rem; border-radius:var(--radius-sm); border:1px solid rgba(147, 197, 253, 0.2); color:#93c5fd; font-weight:700;">Code: WINTER10</span>
+                <span style="font-size:0.75rem; color:var(--success); font-weight:600;">Active Now</span>
+              </div>
+            </div>
+
+            <div class="offer-card" style="background: linear-gradient(135deg, rgba(88, 28, 135, 0.2) 0%, rgba(59, 7, 105, 0.3) 100%); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 140px; position: relative; overflow: hidden;">
+              <div style="position:absolute; top:-10px; right:-10px; font-size:4rem; opacity:0.1; transform: rotate(15deg);">🌧️</div>
+              <div>
+                <div style="font-weight:800; font-size:1.15rem; color:#c084fc; margin-bottom:0.25rem;">Monsoon Retreat (20% Off)</div>
+                <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">Experience the serene nature. Best 20% flat discount on private pool villas and cabins.</p>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
+                <span style="font-family:monospace; font-size:0.8rem; background:rgba(192, 132, 252, 0.1); padding:0.25rem 0.5rem; border-radius:var(--radius-sm); border:1px solid rgba(192, 132, 252, 0.2); color:#c084fc; font-weight:700;">Code: MONSOON20</span>
+                <span style="font-size:0.75rem; color:var(--success); font-weight:600;">Active Now</span>
+              </div>
+            </div>
+
+          </div>
+
           <div class="stats-grid" id="student-status-grid">
             <!-- Dynamically populated room status, allocation status, and payment status -->
           </div>
@@ -204,24 +247,24 @@
       <!-- ======================================================= -->
       <div id="rooms-view" class="view-panel">
         <div class="filter-bar">
-          <select id="filter-hostel" class="filter-select">
+          <select id="filter-hostel" class="filter-select select-dropdown">
             <option value="">All Resort Wings</option>
           </select>
-          <select id="filter-type" class="filter-select">
+          <select id="filter-type" class="filter-select select-dropdown">
             <option value="">All Suite Types</option>
             <option value="Standard Room">Standard Room</option>
             <option value="Deluxe Suite">Deluxe Suite</option>
             <option value="Family Villa">Family Villa</option>
             <option value="Penthouse Cabin">Penthouse Cabin</option>
           </select>
-          <select id="filter-availability" class="filter-select">
+          <select id="filter-availability" class="filter-select select-dropdown">
             <option value="">All Stays</option>
             <option value="available">Available Stays</option>
           </select>
         </div>
 
         <!-- Special notice for recommendation engine -->
-        <div id="recommendation-notice" style="display:none; margin-bottom:1rem; padding:1rem; background:rgba(139, 92, 246, 0.1); border:1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-md); color:#c084fc; font-size:0.9rem;">
+        <div id="recommendation-notice" style="display:none; margin-bottom:1rem; padding:1rem; background:rgba(251, 191, 36, 0.1); border:1px solid rgba(251, 191, 36, 0.3); border-radius: var(--radius-md); color:var(--primary); font-size:0.9rem;">
           💡 Stays are sorted by your <strong>Stay Planner</strong> compatibility recommendations!
         </div>
 
@@ -271,7 +314,7 @@
                 <!-- Guests Count Dropdown -->
                 <div class="form-group">
                   <label for="pref-guests">Number of Guests</label>
-                  <select id="pref-guests" class="form-control">
+                  <select id="pref-guests" class="form-control select-dropdown">
                     <option value="1">1 Guest</option>
                     <option value="2" selected>2 Guests</option>
                     <option value="3">3 Guests</option>
@@ -287,28 +330,43 @@
                 </div>
               </div>
 
-              <!-- Extra Bedding and Premium Add-ons Checkbox Cards -->
+              <!-- New Dropdown: Extra Bedding / Mattresses -->
               <div class="form-group">
-                <label>Premium Stay Options & Add-ons</label>
+                <label for="pref-bedding-select">Extra Bedding & Mattresses</label>
+                <select id="pref-bedding-select" class="form-control select-dropdown">
+                  <option value="none">No Extra Bedding</option>
+                  <option value="single_mattress">Single Mattress (+$20/night)</option>
+                  <option value="double_mattress">Double Mattress (+$35/night)</option>
+                  <option value="rollaway_bed">Extra Rollaway Bed (+$50/night)</option>
+                </select>
+              </div>
+
+              <!-- New Dropdown: Vacation Package -->
+              <div class="form-group">
+                <label for="pref-package">Vacation Package</label>
+                <select id="pref-package" class="form-control select-dropdown">
+                  <option value="room_only">Room Only (Standard Stay)</option>
+                  <option value="breakfast">Breakfast Included (+$20/guest/night)</option>
+                  <option value="all_inclusive">All-Inclusive Resort Pass (+$80/guest/night - SPA, Meals, Shuttle)</option>
+                </select>
+              </div>
+
+              <!-- New Dropdown: Seasonal Promo Code / Discount -->
+              <div class="form-group">
+                <label for="pref-promo">Seasonal Offer / Promo Discount</label>
+                <select id="pref-promo" class="form-control select-dropdown">
+                  <option value="">No Promotional Offer</option>
+                  <option value="SUMMER15">SUMMER15 (15% Summer Discount)</option>
+                  <option value="WINTER10">WINTER10 (10% Winter Escape)</option>
+                  <option value="MONSOON20">MONSOON20 (20% Monsoon Retreat)</option>
+                  <option value="HONEYMOON">HONEYMOON (5% off Couple Stay + Complimentary Champagne)</option>
+                </select>
+              </div>
+
+              <!-- Flat Add-ons Checkbox Cards -->
+              <div class="form-group">
+                <label>Premium Stay Services</label>
                 
-                <!-- Extra Bedding Checkbox Card -->
-                <div class="addon-checkbox-card">
-                  <input type="checkbox" id="pref-bedding" class="addon-checkbox">
-                  <div class="addon-checkbox-content">
-                    <div style="font-weight:600;">Extra Bedding / Rollaway Bed</div>
-                    <div style="font-size:0.8rem; color:var(--text-secondary);">Add an extra bed to your room (+$30/night)</div>
-                  </div>
-                </div>
-
-                <!-- Breakfast Buffet Checkbox Card -->
-                <div class="addon-checkbox-card">
-                  <input type="checkbox" id="pref-breakfast" class="addon-checkbox" value="breakfast">
-                  <div class="addon-checkbox-content">
-                    <div style="font-weight:600;">Premium Breakfast Buffet</div>
-                    <div style="font-size:0.8rem; color:var(--text-secondary);">Daily buffet breakfast for all guests (+$20/guest/night)</div>
-                  </div>
-                </div>
-
                 <!-- Airport Shuttle Checkbox Card -->
                 <div class="addon-checkbox-card">
                   <input type="checkbox" id="pref-shuttle" class="addon-checkbox" value="shuttle">
@@ -335,10 +393,9 @@
 
           <!-- Sticky Live Price Estimator Card -->
           <div class="chart-container" style="position: sticky; top: 2rem;">
-            <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;">Live Booking Estimator</h3>
+            <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; color: var(--primary);">Live Booking Estimator</h3>
             
             <div id="live-estimator-breakdown" style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
-              <!-- Dynamically populated via JS -->
               <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
                 <span>Base Suite Rate (Est.):</span>
                 <span id="est-base-price">$0.00</span>
@@ -348,7 +405,7 @@
                 <span id="est-bedding-price">$0.00</span>
               </div>
               <div style="display:flex; justify-content:space-between; color:var(--text-secondary); display:none;" id="est-breakfast-row">
-                <span>Breakfast Buffet:</span>
+                <span>Vacation Package:</span>
                 <span id="est-breakfast-price">$0.00</span>
               </div>
               <div style="display:flex; justify-content:space-between; color:var(--text-secondary); display:none;" id="est-shuttle-row">
@@ -360,6 +417,18 @@
                 <span id="est-checkout-price">$0.00</span>
               </div>
               
+              <!-- Subtotal row (invisible unless discount applied) -->
+              <div style="display:none; justify-content:space-between; color:var(--text-secondary); border-top: 1px dashed var(--glass-border); padding-top: 0.5rem;" id="est-subtotal-row">
+                <span>Subtotal:</span>
+                <span id="est-subtotal-price">$0.00</span>
+              </div>
+
+              <!-- Discount row -->
+              <div style="display:none; justify-content:space-between; color:var(--primary);" id="est-discount-row">
+                <span id="est-discount-label">Seasonal Offer Discount:</span>
+                <span id="est-discount-price">-$0.00</span>
+              </div>
+
               <div style="border-top: 1px solid var(--glass-border); padding-top: 1rem; margin-top: 1rem; display:flex; justify-content:space-between; font-size:1.15rem; font-weight:700;">
                 <span>Estimated Total:</span>
                 <span id="est-total-price" style="color:var(--primary);">$0.00</span>
@@ -453,7 +522,7 @@
         <div class="form-row">
           <div class="form-group">
             <label for="room-type">Suite Type</label>
-            <select id="room-type" class="form-control">
+            <select id="room-type" class="form-control select-dropdown">
               <option value="Standard Room">Standard Room</option>
               <option value="Deluxe Suite">Deluxe Suite</option>
               <option value="Family Villa">Family Villa</option>
@@ -531,7 +600,7 @@
         </div>
         
         <div style="margin: 1.5rem 0; font-size: 1.15rem; font-weight: 700; display: flex; justify-content: space-between;">
-          <span>Total Billing Price:</span>
+          <span>Total Booking Price:</span>
           <span id="payment-amount-display" style="color: var(--primary);">$0.00</span>
         </div>
 

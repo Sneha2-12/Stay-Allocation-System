@@ -7,7 +7,17 @@ const User = require('../models/User');
 // @access  Private (Guest only)
 exports.createAllocationRequest = async (req, res, next) => {
   try {
-    const { roomId, stayType, guestsCount, extraBedding, addOns, nights, notes } = req.body;
+    const { 
+      roomId, 
+      stayType, 
+      guestsCount, 
+      extraBeddingType, 
+      vacationPackage, 
+      promoCode, 
+      addOns, 
+      nights, 
+      notes 
+    } = req.body;
 
     // Check if user is guest
     if (req.user.role !== 'guest') {
@@ -48,22 +58,43 @@ exports.createAllocationRequest = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'This suite is currently fully occupied' });
     }
 
-    // Calculate Total Price
     const stayNights = Number(nights) || 1;
-    let totalPrice = room.price * stayNights;
+    const gCount = Number(guestsCount) || 1;
 
-    if (extraBedding) {
-      totalPrice += 30 * stayNights; // $30/night for extra bedding
-    }
-    if (addOns && addOns.includes('breakfast')) {
-      totalPrice += 20 * Number(guestsCount) * stayNights; // $20/guest/night
-    }
+    // 1. Base Suite Price
+    let subtotal = room.price * stayNights;
+
+    // 2. Extra Bedding/Mattress pricing
+    let beddingRate = 0;
+    if (extraBeddingType === 'single_mattress') beddingRate = 20;
+    else if (extraBeddingType === 'double_mattress') beddingRate = 35;
+    else if (extraBeddingType === 'rollaway_bed') beddingRate = 50;
+    subtotal += beddingRate * stayNights;
+
+    // 3. Vacation Package pricing
+    let packageRate = 0;
+    if (vacationPackage === 'breakfast') packageRate = 20; // $20/guest/night
+    else if (vacationPackage === 'all_inclusive') packageRate = 80; // $80/guest/night
+    subtotal += packageRate * gCount * stayNights;
+
+    // 4. Flat Add-ons (Shuttle, Late Checkout)
     if (addOns && addOns.includes('shuttle')) {
-      totalPrice += 40; // $40 flat fee
+      subtotal += 40; // $40 flat fee
     }
     if (addOns && addOns.includes('lateCheckout')) {
-      totalPrice += 30; // $30 flat fee
+      subtotal += 30; // $30 flat fee
     }
+
+    // 5. Promo Code Seasonal Discounts
+    let discountApplied = 0;
+    const promo = String(promoCode).toUpperCase().trim();
+    if (promo === 'SUMMER15') discountApplied = 15;
+    else if (promo === 'WINTER10') discountApplied = 10;
+    else if (promo === 'MONSOON20') discountApplied = 20;
+    else if (promo === 'HONEYMOON' && stayType === 'couple') discountApplied = 5; // 5% + champagne package
+
+    const discountAmount = subtotal * (discountApplied / 100);
+    const totalPrice = Math.round((subtotal - discountAmount) * 100) / 100;
 
     // Create booking
     const booking = await Allocation.create({
@@ -71,8 +102,11 @@ exports.createAllocationRequest = async (req, res, next) => {
       room: roomId,
       status: 'pending',
       stayType,
-      guestsCount: Number(guestsCount),
-      extraBedding: Boolean(extraBedding),
+      guestsCount: gCount,
+      extraBeddingType,
+      vacationPackage,
+      promoCode: promo,
+      discountApplied,
       addOns: addOns || [],
       nights: stayNights,
       totalPrice,
