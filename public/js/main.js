@@ -100,6 +100,13 @@ const paymentAmountDisplay = document.getElementById('payment-amount-display');
 const paymentAllocationId = document.getElementById('payment-allocation-id');
 const paymentCheckoutForm = document.getElementById('payment-checkout-form');
 
+// Thank You Overlay DOM
+const thankYouOverlay = document.getElementById('thank-you-overlay');
+const thankYouIcon = document.getElementById('thank-you-icon');
+const thankYouTitle = document.getElementById('thank-you-title');
+const thankYouMsg = document.getElementById('thank-you-msg');
+const thankYouCountdown = document.getElementById('thank-you-countdown');
+
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthStatus();
@@ -416,18 +423,24 @@ function setupEventListeners() {
     }
   });
 
-  // Contact Concierge Form
+  // Contact Concierge Form Submit (Inquiry Query)
   const contactForm = document.getElementById('contact-concierge-form');
   if (contactForm) {
     contactForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const subject = document.getElementById('contact-subject').value;
-      alert(`Message regarding "${subject}" sent to concierge desk! We will reply shortly.`);
-      contactForm.reset();
       
       addConciergeNotification(
         '💬 Concierge Desk Messaging',
         `Hospitality message regarding "${subject}" successfully delivered. Concierge will reply via email.`
+      );
+
+      // Trigger Fullscreen thank you overlay countdown (4 seconds)
+      showThankYouOverlay(
+        '✉️',
+        'Inquiry Message Received',
+        `Your query regarding "${subject}" is currently being processed. Our resort concierge team will review your message and let you know at their earliest convenience.`,
+        contactForm
       );
     });
   }
@@ -515,6 +528,32 @@ function setupEventListeners() {
   });
 }
 
+// Fullscreen Thank You Countdown Helper
+function showThankYouOverlay(icon, title, message, formToReset) {
+  thankYouIcon.textContent = icon;
+  thankYouTitle.textContent = title;
+  thankYouMsg.textContent = message;
+  
+  // Set Display to flex
+  thankYouOverlay.style.display = 'flex';
+  
+  let countdown = 4;
+  thankYouCountdown.textContent = `Returning to Feedback in ${countdown} seconds...`;
+  
+  const timer = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      thankYouCountdown.textContent = `Returning to Feedback in ${countdown} seconds...`;
+    } else {
+      clearInterval(timer);
+      thankYouOverlay.style.display = 'none';
+      if (formToReset) {
+        formToReset.reset();
+      }
+    }
+  }, 1000);
+}
+
 // Setup Stay Planner Interactions
 function setupStayPlannerInteractions() {
   stayTypeOptions.forEach(opt => {
@@ -574,10 +613,7 @@ function setupSeasonalCalendarClicks() {
 }
 
 function applySeasonalConfigurations(promo) {
-  // Navigate to planner
   switchView('matching-view');
-  
-  // Set the promo dropdown
   prefPromo.value = promo;
   
   const today = new Date();
@@ -887,16 +923,20 @@ function setupStarRatingSystem() {
     } catch (err) {
       console.error('Error awarding points for review:', err);
     }
-
-    alert(`Thank you for your feedback! We have posted your review and credited 100 Loyalty Points to your Club membership.`);
     
     addConciergeNotification(
       '🌟 Star Review Published',
       `Guest review submitted (${starsCount} Stars). 100 Gold Club Loyalty Points credited to user balance.`
     );
 
-    reviewForm.reset();
-    
+    // Trigger Fullscreen thank you overlay countdown (4 seconds)
+    showThankYouOverlay(
+      '🌟',
+      'Thank You for Your Feedback!',
+      'We highly appreciate your review details. 100 Loyalty Reward points have been credited directly to your Club Membership card.',
+      reviewForm
+    );
+
     // Reset stars layout
     stars.forEach(s => s.classList.remove('active'));
     stars.forEach((s, i) => {
@@ -904,7 +944,8 @@ function setupStarRatingSystem() {
     });
     ratingInput.value = '5';
 
-    renderReviewsWall();
+    // Wait slightly to render review wall updates so overlay transitions smoothly
+    setTimeout(renderReviewsWall, 100);
   });
 }
 
@@ -972,7 +1013,6 @@ function setupCreditCardFormatting() {
 
   if (!cardInput) return;
 
-  // Auto space credit card number
   cardInput.addEventListener('input', (e) => {
     let val = e.target.value.replace(/\D/g, '');
     let formatted = '';
@@ -985,7 +1025,6 @@ function setupCreditCardFormatting() {
     e.target.value = formatted;
     previewNum.textContent = formatted || '•••• •••• •••• ••••';
     
-    // Auto check brand logo
     if (formatted.startsWith('4')) {
       previewBrand.textContent = 'VISA';
     } else if (formatted.startsWith('5')) {
@@ -995,7 +1034,6 @@ function setupCreditCardFormatting() {
     }
   });
 
-  // Auto slash expiry date
   expiryInput.addEventListener('input', (e) => {
     let val = e.target.value.replace(/\D/g, '');
     let formatted = '';
@@ -1010,12 +1048,10 @@ function setupCreditCardFormatting() {
     previewExpiry.textContent = formatted || 'MM/YY';
   });
 
-  // Sync Cardholder name
   nameInput.addEventListener('input', (e) => {
     previewName.textContent = e.target.value.toUpperCase() || 'YOUR NAME';
   });
 
-  // Restrict CVC numbers only
   cvcInput.addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/\D/g, '');
   });

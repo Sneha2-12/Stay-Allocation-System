@@ -76,12 +76,12 @@
         <li class="nav-link-item active" data-view="dashboard-view">Dashboard</li>
         <li class="nav-link-item" data-view="rooms-view">Suites</li>
         <li class="nav-link-item student-only" data-view="matching-view">Planner</li>
-        <li class="nav-link-item student-only" data-view="bonus-view">Club Points</li>
+        <li class="nav-link-item student-only" data-view="bonus-view">Loyalty</li>
         <li class="nav-link-item" data-view="dine-view">Dining</li>
         <li class="nav-link-item" data-view="location-view">Location</li>
         <li class="nav-link-item" data-view="about-view">About</li>
-        <li class="nav-link-item" data-view="contact-view">Contact & Reviews</li>
-        <li class="nav-link-item" data-view="payments-view">Ledger</li>
+        <li class="nav-link-item" data-view="contact-view">Feedback</li>
+        <li class="nav-link-item" data-view="payments-view">Billing</li>
       </ul>
 
       <div class="nav-user-menu">
@@ -246,7 +246,7 @@
           </div>
 
           <!-- Main Layout Split: Stats Cards & Concierge Notifications Desk -->
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start;">
             <div>
               <div class="stats-grid" id="student-status-grid" style="margin-bottom: 0;">
                 <!-- Dynamically populated room status, allocation status, and payment status -->
@@ -318,7 +318,7 @@
       <!-- C. VIEW: STAY PLANNER PANEL                             -->
       <!-- ======================================================= -->
       <div id="matching-view" class="view-panel">
-        <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 2rem; align-items: start;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start;">
           
           <!-- Configuration Form Card -->
           <div class="preference-card" style="margin-bottom: 0;">
@@ -504,7 +504,7 @@
       <!-- E. VIEW: LOYALTY POINTS / BONUS PANEL                   -->
       <!-- ======================================================= -->
       <div id="bonus-view" class="view-panel">
-        <div style="display:grid; grid-template-columns:1fr 2fr; gap:2rem; align-items:start;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem; align-items:start;">
           
           <!-- Points Balance Card -->
           <div class="chart-container" style="text-align:center; padding:3rem 1.5rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; position:relative; overflow:hidden;">
@@ -622,7 +622,7 @@
       <!-- G. VIEW: RESORT LOCATION PANEL                          -->
       <!-- ======================================================= -->
       <div id="location-view" class="view-panel">
-        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:2.5rem; align-items:start;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2.5rem; align-items:start;">
           
           <!-- Mock map graphics layout -->
           <div class="preference-card" style="margin-bottom:0;">
@@ -680,13 +680,15 @@
             </div>
           </div>
 
-          <!-- Real Interactive OpenStreetMap Iframe -->
-          <div class="preference-card" style="grid-column: 1 / -1; margin-top: 1rem; padding: 1.5rem;">
-            <h3 style="color:var(--primary); margin-bottom:1rem;">Interactive Geographical Map (Real-Time Location)</h3>
-            <div style="width: 100%; height: 350px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--glass-border);">
-              <iframe width="100%" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=-118.46193790435792%2C33.97159781878345%2C-118.43575954437257%2C33.985958229983995&amp;layer=mapnik&amp;marker=33.97878070908868%2C-118.44884872436523" style="border:0;"></iframe>
+          <!-- Real Interactive OpenStreetMap Iframe - Centered & Sized Correctly -->
+          <div class="preference-card" style="grid-column: 1 / -1; margin-top: 1rem; padding: 1.5rem; text-align: center;">
+            <h3 style="color:var(--primary); margin-bottom:1rem; text-align: left;">Interactive Geographical Map (Real-Time Location)</h3>
+            
+            <div style="max-width: 600px; margin: 0 auto; height: 300px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--glass-border); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+              <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=-118.46193790435792%2C33.97159781878345%2C-118.43575954437257%2C33.985958229983995&amp;layer=mapnik&amp;marker=33.97878070908868%2C-118.44884872436523" style="border:0; display:block;"></iframe>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
+            
+            <div style="max-width: 600px; margin: 0.75rem auto 0 auto; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.8rem; color: var(--text-muted);">📍 Coordinates: 33.9788° N, 118.4488° W (Marina Del Rey Coast, CA)</span>
               <a href="https://www.openstreetmap.org/?mlat=33.9788&amp;mlon=-118.4488#map=15/33.9788/-118.4488" target="_blank" style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 600;">View Larger Map</a>
             </div>
@@ -709,7 +711,7 @@
             </p>
           </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:2rem;">
             <div>
               <h3>5-Star Amenities</h3>
               <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.5rem;">
@@ -745,7 +747,7 @@
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem; align-items:start;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem; align-items:start;">
           
           <!-- Contact Form Card -->
           <div class="preference-card" style="margin-bottom:0;">
@@ -843,6 +845,20 @@
   <!-- ======================================================= -->
   <!-- 3. MODALS AND PORTALS                                   -->
   <!-- ======================================================= -->
+
+  <!-- Fullscreen Thank You Overlay Screen (Queries & Star Reviews) -->
+  <div id="thank-you-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.96); z-index:200; backdrop-filter:blur(20px); align-items:center; justify-content:center;">
+    <div class="auth-container" style="text-align:center; max-width:550px; padding:3rem; border-color:var(--primary); box-shadow:0 0 50px var(--primary-glow); animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">
+      <div style="font-size:4.5rem; margin-bottom:1rem;" id="thank-you-icon">🎉</div>
+      <h2 style="color:var(--primary); margin-bottom:1rem; font-size:2rem;" id="thank-you-title">Thank You!</h2>
+      <p style="color:var(--text-secondary); line-height:1.6; margin-bottom:2rem; font-size:1rem;" id="thank-you-msg">Your submission has been completed.</p>
+      
+      <!-- Countdown Return Status -->
+      <div style="font-size:0.85rem; color:var(--text-muted); background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:0.5rem; border-radius:var(--radius-sm); display:inline-block; font-weight:600;" id="thank-you-countdown">
+        Returning to Feedback in 4 seconds...
+      </div>
+    </div>
+  </div>
 
   <!-- Modal: Request Booking -->
   <div id="request-modal" class="modal">
