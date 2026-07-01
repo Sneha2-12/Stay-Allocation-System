@@ -68,64 +68,36 @@
   <!-- ======================================================= -->
   <div id="app-view" class="app-container">
     
-    <!-- Sidebar Navigation -->
-    <aside>
-      <div class="logo-section">
-        <h2>StayEase</h2>
-      </div>
-
-      <ul class="nav-menu">
-        <li class="nav-item active" data-view="dashboard-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-          Dashboard
-        </li>
-        <li class="nav-item" data-view="rooms-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Suites & Stays
-        </li>
-        <li class="nav-item student-only" data-view="matching-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          Stay Planner
-        </li>
-        <li class="nav-item student-only" data-view="bonus-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Loyalty Points
-        </li>
-        <li class="nav-item" data-view="dine-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          Dining & Cuisine
-        </li>
-        <li class="nav-item" data-view="location-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          Resort Location
-        </li>
-        <li class="nav-item" data-view="about-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          About Resort
-        </li>
-        <li class="nav-item" data-view="contact-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          Contact Concierge
-        </li>
-        <li class="nav-item" data-view="payments-view">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          Billing & Receipts
-        </li>
+    <!-- Top Sticky Glassmorphic Navbar -->
+    <nav class="top-navbar">
+      <div class="nav-brand" onclick="switchView('dashboard-view')">StayEase</div>
+      
+      <ul class="nav-links">
+        <li class="nav-link-item active" data-view="dashboard-view">Dashboard</li>
+        <li class="nav-link-item" data-view="rooms-view">Suites</li>
+        <li class="nav-link-item student-only" data-view="matching-view">Planner</li>
+        <li class="nav-link-item student-only" data-view="bonus-view">Club Points</li>
+        <li class="nav-link-item" data-view="dine-view">Dining</li>
+        <li class="nav-link-item" data-view="location-view">Location</li>
+        <li class="nav-link-item" data-view="about-view">About</li>
+        <li class="nav-link-item" data-view="contact-view">Contact & Reviews</li>
+        <li class="nav-link-item" data-view="payments-view">Ledger</li>
       </ul>
 
-      <div class="user-profile-summary">
-        <div class="profile-name" id="current-user-name">Loading...</div>
-        <div class="profile-role" id="current-user-role">Guest</div>
-        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.5rem; margin-top: 1rem; font-size: 0.85rem;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <div class="nav-user-menu">
+        <div style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; margin-right: 1.25rem;">
+          <span class="profile-name" id="current-user-name" style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem; white-space: nowrap;">Loading...</span>
+          <span class="profile-role" id="current-user-role" style="font-size: 0.75rem; color: var(--primary); letter-spacing: 0.5px; white-space: nowrap;">Guest</span>
+        </div>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; height: auto; border-radius: var(--radius-sm); white-space: nowrap;">
           Sign Out
         </button>
       </div>
-    </aside>
+    </nav>
 
     <!-- Main Content Area -->
     <main>
-      <header>
+      <header style="margin-bottom: 2rem;">
         <h1 id="view-title">Dashboard</h1>
         <div id="header-actions">
           <!-- Dynamic Action Buttons (e.g. Add Room for Manager) -->
@@ -202,7 +174,7 @@
             <span style="font-size: 0.8rem; color: var(--primary);">*Click any offer to apply promo discount code instantly</span>
           </div>
           
-          <div class="offers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+          <div class="offers-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
             
             <div class="offer-card clickable-offer" data-promo="SUMMER15" style="background: linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(2, 44, 34, 0.6) 100%); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 140px; position: relative; overflow: hidden; cursor: pointer;">
               <div style="position:absolute; top:-10px; right:-10px; font-size:4rem; opacity:0.1; transform: rotate(15deg);">🌴</div>
@@ -240,6 +212,37 @@
               </div>
             </div>
 
+          </div>
+
+          <!-- Resort Seasonal Calendar Selector -->
+          <div class="preference-card" style="margin-bottom: 2.5rem; padding: 1.5rem;">
+            <h3 style="color: var(--primary); margin-bottom: 0.5rem;">Resort Seasonal Booking Calendar</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">Select your preferred holiday season block. The planner dates and applicable promotional discounts will load instantly.</p>
+            
+            <div class="seasonal-calendar-container" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1.25rem;">
+              
+              <div class="calendar-season-card clickable-season" data-season="summer" style="background:rgba(251,191,36,0.03); border:1px solid rgba(251,191,36,0.15); border-radius:var(--radius-md); padding:1rem 1.25rem; cursor:pointer; text-align:center; transition:var(--transition);">
+                <div style="font-size:1.8rem; margin-bottom:0.5rem;">🌴</div>
+                <div style="font-weight:700; font-size:1rem; color:var(--primary);">Summer Getaway</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.25rem;">June - August</div>
+                <span class="badge badge-approved" style="background:rgba(251,191,36,0.1); color:var(--primary); font-size:0.7rem; margin-top:0.5rem;">15% Off Active</span>
+              </div>
+
+              <div class="calendar-season-card clickable-season" data-season="monsoon" style="background:rgba(192,132,252,0.03); border:1px solid rgba(192,132,252,0.15); border-radius:var(--radius-md); padding:1rem 1.25rem; cursor:pointer; text-align:center; transition:var(--transition);">
+                <div style="font-size:1.8rem; margin-bottom:0.5rem;">🌧️</div>
+                <div style="font-weight:700; font-size:1rem; color:#c084fc;">Monsoon Retreat</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.25rem;">July - September</div>
+                <span class="badge badge-approved" style="background:rgba(192,132,252,0.1); color:#c084fc; font-size:0.7rem; margin-top:0.5rem; border-color:rgba(192,132,252,0.3)">20% Off Active</span>
+              </div>
+
+              <div class="calendar-season-card clickable-season" data-season="winter" style="background:rgba(147,197,253,0.03); border:1px solid rgba(147,197,253,0.15); border-radius:var(--radius-md); padding:1rem 1.25rem; cursor:pointer; text-align:center; transition:var(--transition);">
+                <div style="font-size:1.8rem; margin-bottom:0.5rem;">❄️</div>
+                <div style="font-weight:700; font-size:1rem; color:#93c5fd;">Winter Escape</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.25rem;">December - February</div>
+                <span class="badge badge-approved" style="background:rgba(147,197,253,0.1); color:#93c5fd; font-size:0.7rem; margin-top:0.5rem; border-color:rgba(147,197,253,0.3)">10% Off Active</span>
+              </div>
+
+            </div>
           </div>
 
           <!-- Main Layout Split: Stats Cards & Concierge Notifications Desk -->
@@ -633,12 +636,12 @@
               </div>
               
               <div style="display:flex; justify-content:space-between;">
-                <div style="background:var(--panel-bg); border:1px solid var(--glass-border); padding:0.5rem; border-radius:var(--radius-sm); font-size:0.75rem;">🛎️ Concierge Desk & Lobby</div>
+                <div style="background:var(--panel-bg); border:1px solid var(--glass-border); padding:0.5rem; border-radius:var(--radius-sm); font-size:0.75rem;">🛎️ Concierge Desk</div>
                 <div style="background:var(--panel-bg); border:1px solid var(--glass-border); padding:0.5rem; border-radius:var(--radius-sm); font-size:0.75rem; margin-right:35%;">🏨 East Ocean Wing</div>
               </div>
               
               <div style="display:flex; justify-content:space-around; margin:1rem 0;">
-                <div style="background:var(--panel-bg); border:1px solid var(--glass-border); padding:0.5rem; border-radius:var(--radius-sm); font-size:0.75rem;">🏝️ West Palms Wing (Pool Villas)</div>
+                <div style="background:var(--panel-bg); border:1px solid var(--glass-border); padding:0.5rem; border-radius:var(--radius-sm); font-size:0.75rem;">🏝️ West Palms Wing</div>
                 <div style="background:var(--panel-bg); border:1px solid var(--glass-border); padding:0.5rem; border-radius:var(--radius-sm); font-size:0.75rem;">🍽️ Diners Hub</div>
               </div>
               
@@ -672,8 +675,20 @@
             <div>
               <strong>Airport Escort Assistance:</strong>
               <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.25rem; line-height:1.4;">
-                We provide roundtrip black car escorts directly from the airport terminal gates. Check the airport shuttle service in the Stay Planner to schedule your buggy pickup.
+                We provide roundtrip car escorts directly from the airport terminal gates. Check the airport shuttle service in the Stay Planner to schedule your buggy pickup.
               </p>
+            </div>
+          </div>
+
+          <!-- Real Interactive OpenStreetMap Iframe -->
+          <div class="preference-card" style="grid-column: 1 / -1; margin-top: 1rem; padding: 1.5rem;">
+            <h3 style="color:var(--primary); margin-bottom:1rem;">Interactive Geographical Map (Real-Time Location)</h3>
+            <div style="width: 100%; height: 350px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--glass-border);">
+              <iframe width="100%" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://www.openstreetmap.org/export/embed.html?bbox=-118.46193790435792%2C33.97159781878345%2C-118.43575954437257%2C33.985958229983995&amp;layer=mapnik&amp;marker=33.97878070908868%2C-118.44884872436523" style="border:0;"></iframe>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">📍 Coordinates: 33.9788° N, 118.4488° W (Marina Del Rey Coast, CA)</span>
+              <a href="https://www.openstreetmap.org/?mlat=33.9788&amp;mlon=-118.4488#map=15/33.9788/-118.4488" target="_blank" style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 600;">View Larger Map</a>
             </div>
           </div>
 
@@ -712,10 +727,25 @@
       </div>
 
       <!-- ======================================================= -->
-      <!-- I. VIEW: CONTACT CONCIERGE PANEL                         -->
+      <!-- I. VIEW: CONTACT & REVIEWS PANEL                        -->
       <!-- ======================================================= -->
       <div id="contact-view" class="view-panel">
-        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:2rem; align-items:start;">
+        
+        <!-- Support Hotlines Banner -->
+        <div class="stats-grid" style="margin-bottom: 2rem;">
+          <div class="stat-card">
+            <span class="stat-label">Official Feedback Email</span>
+            <span class="stat-value" style="font-size: 1.35rem; color: var(--primary); font-family: monospace; margin: 0.5rem 0;">feedback@stayease.com</span>
+            <span class="stat-desc">Send official reviews, receipts disputes, or custom queries</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Concierge Helpline Phone</span>
+            <span class="stat-value" style="font-size: 1.35rem; color: var(--primary); font-family: monospace; margin: 0.5rem 0;">+1 (800) 555-EASE</span>
+            <span class="stat-desc">Helpline extension 4 for Gold Club support (24/7 Hotline)</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem; align-items:start;">
           
           <!-- Contact Form Card -->
           <div class="preference-card" style="margin-bottom:0;">
@@ -734,35 +764,46 @@
               </div>
               <div class="form-group">
                 <label for="contact-msg">Your Message</label>
-                <textarea id="contact-msg" class="form-control" rows="5" placeholder="Write details here, our concierge desk replies within 10 minutes..." required></textarea>
+                <textarea id="contact-msg" class="form-control" rows="4" placeholder="Write details here, our concierge desk replies within 10 minutes..." required></textarea>
               </div>
               <button type="submit" class="btn btn-primary">Send Secure Message</button>
             </form>
           </div>
 
-          <!-- Contact Details -->
-          <div class="chart-container" style="display:flex; flex-direction:column; gap:1.25rem;">
-            <h3 style="color:var(--primary);">Hospitality Hotline</h3>
+          <!-- Reviews Ratings system -->
+          <div class="preference-card" style="margin-bottom:0;">
+            <h3 style="color:var(--primary); margin-bottom:0.5rem;">Submit Guest Review</h3>
+            <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">Share your resort experience with us! Submit a review to earn <strong>100 Gold Club Loyalty Points</strong> instantly.</p>
             
-            <div>
-              <strong>Front Office Concierge:</strong>
-              <p style="color:var(--text-secondary); font-size:0.95rem; margin-top:0.25rem;">📞 +1 (800) 555-EASE (Concierge Desk)</p>
-              <p style="color:var(--text-secondary); font-size:0.95rem; margin-top:0.25rem;">📧 hospitality@stayease.com</p>
-            </div>
-
-            <div>
-              <strong>Resort Dining Desk:</strong>
-              <p style="color:var(--text-secondary); font-size:0.95rem; margin-top:0.25rem;">📞 +1 (800) 555-DINE (Resort Restaurants)</p>
-            </div>
-
-            <div>
-              <strong>concierge Service Hours:</strong>
-              <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.25rem; line-height:1.4;">
-                Our desk in the central lobby is staffed 24 hours a day, 7 days a week, including holidays. Feel free to call or walk-in.
-              </p>
-            </div>
+            <form id="submit-review-form">
+              <div class="form-group">
+                <label>Review Star Rating</label>
+                <!-- Clickable Star Icons Container -->
+                <div class="star-rating-container" style="display:flex; gap:0.5rem; font-size:2rem; color:rgba(255,255,255,0.1); cursor:pointer; margin:0.5rem 0;">
+                  <span class="review-star" data-rating="1">★</span>
+                  <span class="review-star" data-rating="2">★</span>
+                  <span class="review-star" data-rating="3">★</span>
+                  <span class="review-star" data-rating="4">★</span>
+                  <span class="review-star" data-rating="5">★</span>
+                </div>
+                <input type="hidden" id="review-stars-val" value="5">
+              </div>
+              <div class="form-group">
+                <label for="review-text">Your Comments</label>
+                <textarea id="review-text" class="form-control" rows="3" placeholder="Share details about the room views, beach access, or gastronomy services..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Publish Review</button>
+            </form>
           </div>
 
+        </div>
+
+        <!-- Recent Reviews Wall -->
+        <h3 style="margin-top: 3rem; margin-bottom: 1rem; color: var(--primary);">Live Guest Reviews Wall</h3>
+        <div class="table-container" style="padding: 1.5rem; backdrop-filter: blur(16px);">
+          <div id="reviews-wall-list" style="display:flex; flex-direction:column; gap:1.25rem;">
+            <!-- Seeded/Dynamic guest reviews -->
+          </div>
         </div>
       </div>
 
@@ -881,7 +922,16 @@
   <div id="payment-modal" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="closeModal('payment-modal')">&times;</span>
-      <h2>Secure Payment Portal</h2>
+      
+      <!-- secure Checkout Step Progress Flow Tracker -->
+      <div class="secure-payment-steps" style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); border-bottom:1px solid var(--glass-border); padding-bottom:1rem; margin-bottom:1.5rem;">
+        <span style="color:var(--success); font-weight:600;">✓ Plan Stay</span>
+        <span style="color:var(--success); font-weight:600;">✓ Select Suite</span>
+        <span style="color:var(--primary); font-weight:700; border-bottom:2px solid var(--primary); padding-bottom:2px;">➔ Secure Checkout</span>
+        <span>📁 Issued Receipt</span>
+      </div>
+
+      <h2>Secure Stripe Checkout</h2>
       <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
         Completing stay allocation for Room <span id="payment-room-num" style="font-weight:600;"></span>.
       </p>

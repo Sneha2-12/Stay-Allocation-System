@@ -17,7 +17,7 @@ const authSubtitle = document.getElementById('auth-subtitle');
 const toggleText = document.getElementById('toggle-text');
 const logoutBtn = document.getElementById('logout-btn');
 
-const navItems = document.querySelectorAll('.nav-item');
+const navItems = document.querySelectorAll('.nav-link-item');
 const viewPanels = document.querySelectorAll('.view-panel');
 const viewTitle = document.getElementById('view-title');
 const headerActions = document.getElementById('header-actions');
@@ -106,6 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   setupStayPlannerInteractions();
   setupPromoCardClicks();
+  setupSeasonalCalendarClicks();
+  setupStarRatingSystem();
+  setupCreditCardFormatting();
+  seedReviewsWall();
 });
 
 // Check Authentication Status
@@ -145,10 +149,9 @@ function loginUserSession(user) {
     document.querySelectorAll('.student-only').forEach(el => el.style.display = 'none');
     wardenDashboard.style.display = 'block';
     studentDashboard.style.display = 'none';
-    
     headerActions.innerHTML = `<button class="btn btn-primary" onclick="openModal('add-room-modal')">Add Stay/Suite</button>`;
   } else {
-    document.querySelectorAll('.student-only').forEach(el => el.style.display = 'flex');
+    document.querySelectorAll('.student-only').forEach(el => el.style.display = 'inline-block');
     wardenDashboard.style.display = 'none';
     studentDashboard.style.display = 'block';
     headerActions.innerHTML = '';
@@ -160,11 +163,11 @@ function loginUserSession(user) {
   // Set Default Stay Planner Calendar Dates (Today and Tomorrow)
   const today = new Date();
   const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setDate(tomorrow.getDate() + 2);
 
   prefCheckin.value = today.toISOString().split('T')[0];
   prefCheckout.value = tomorrow.toISOString().split('T')[0];
-  prefNights.value = 1;
+  prefNights.value = 2;
 
   // Load notifications from localStorage
   renderConciergeNotifications();
@@ -200,7 +203,7 @@ function switchView(viewId) {
     'dine-view': 'Fine Dining & Menus',
     'location-view': 'Estate Location & Map',
     'about-view': 'Resort Profile',
-    'contact-view': 'Contact Concierge',
+    'contact-view': 'Contact Concierge & Guest Reviews',
     'payments-view': 'Resort Billing Ledger'
   };
   viewTitle.textContent = titles[viewId] || 'Dashboard';
@@ -216,6 +219,8 @@ function switchView(viewId) {
     loadDashboardData();
   } else if (viewId === 'bonus-view') {
     updatePointsUI();
+  } else if (viewId === 'contact-view') {
+    renderReviewsWall();
   }
 }
 
@@ -298,7 +303,7 @@ function setupEventListeners() {
     }
   });
 
-  // Navigation
+  // Navigation Links
   navItems.forEach(item => {
     item.addEventListener('click', () => {
       switchView(item.getAttribute('data-view'));
@@ -322,7 +327,6 @@ function setupEventListeners() {
     if (prefShuttle.checked) addOns.push('shuttle');
     if (prefLateCheckout.checked) addOns.push('lateCheckout');
 
-    // If promo is invalid due to dates, do not allow submission
     if (promoValidationWarning) {
       alert('Cannot apply promo code: ' + promoValidationWarning);
       return;
@@ -352,7 +356,7 @@ function setupEventListeners() {
           extraBeddingType,
           vacationPackage,
           promoCode,
-          nights: Number(prefNights.value) || 1
+          nights: Number(prefNights.value) || 2
         };
         switchView('rooms-view');
       }
@@ -367,7 +371,7 @@ function setupEventListeners() {
     const roomId = requestRoomId.value;
     const notes = requestNotes.value;
 
-    const nights = currentUser.transientBooking ? currentUser.transientBooking.nights : 1;
+    const nights = currentUser.transientBooking ? currentUser.transientBooking.nights : 2;
     const extraBeddingType = currentUser.transientBooking ? currentUser.transientBooking.extraBeddingType : 'none';
     const vacationPackage = currentUser.transientBooking ? currentUser.transientBooking.vacationPackage : 'room_only';
     const promoCode = currentUser.transientBooking ? currentUser.transientBooking.promoCode : '';
@@ -397,7 +401,6 @@ function setupEventListeners() {
         const booking = data.data;
         alert('Stay booking reservation submitted successfully!');
         
-        // Display Concierge Notification
         addConciergeNotification(
           '📧 Booking Reservation Issued',
           `Stay request submitted for Room ${booking.room ? booking.room.roomNumber : ''}. Reservation copy dispatched to ${currentUser.email}.`
@@ -488,7 +491,6 @@ function setupEventListeners() {
       if (data.success) {
         alert('Payment completed successfully! Official PDF invoice generated. You earned 500 Loyalty Bonus Points!');
         
-        // Add Concierge Notifications
         addConciergeNotification(
           '📧 Payment Invoice Confirmed',
           `Stay billing finalized. Paid copy of invoice and electronic room keys sent to ${currentUser.email}.`
@@ -533,7 +535,6 @@ function setupStayPlannerInteractions() {
     });
   });
 
-  // Calculate nights automatically when calendars change
   prefCheckin.addEventListener('change', calculateNightsFromDates);
   prefCheckout.addEventListener('change', calculateNightsFromDates);
 
@@ -551,50 +552,67 @@ function setupPromoCardClicks() {
   offerCards.forEach(card => {
     card.addEventListener('click', () => {
       const promo = card.getAttribute('data-promo');
-      
-      // Navigate to planner
-      switchView('matching-view');
-      
-      // Auto-set the promo dropdown
-      prefPromo.value = promo;
-      
-      // Auto-configure valid dates matching the promo code seasons
-      const today = new Date();
-      let year = today.getFullYear();
-      
-      let checkinDateStr = '';
-      let checkoutDateStr = '';
-      
-      if (promo === 'SUMMER15') {
-        checkinDateStr = `${year}-07-15`;
-        checkoutDateStr = `${year}-07-18`;
-      } else if (promo === 'WINTER10') {
-        checkinDateStr = `${year}-12-15`;
-        checkoutDateStr = `${year}-12-18`;
-      } else if (promo === 'MONSOON20') {
-        checkinDateStr = `${year}-08-15`;
-        checkoutDateStr = `${year}-08-18`;
-      } else {
-        // Honeymoon (all year)
-        checkinDateStr = today.toISOString().split('T')[0];
-        const nextDay = new Date();
-        nextDay.setDate(nextDay.getDate() + 2);
-        checkoutDateStr = nextDay.toISOString().split('T')[0];
-      }
-
-      prefCheckin.value = checkinDateStr;
-      prefCheckout.value = checkoutDateStr;
-      
-      calculateNightsFromDates();
-      
-      alert(`Promo offer "${promo}" applied successfully! Stays dates preconfigured for your trip.`);
-      
-      addConciergeNotification(
-        '🛎️ Promo Offer Preconfigured',
-        `Seasonal offer code ${promo} selected. Stay Planner calendar ranges customized automatically.`
-      );
+      applySeasonalConfigurations(promo);
     });
   });
+}
+
+// Setup Seasonal Calendar Clicks
+function setupSeasonalCalendarClicks() {
+  const seasonCards = document.querySelectorAll('.clickable-season');
+  seasonCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const season = card.getAttribute('data-season');
+      let promo = '';
+      if (season === 'summer') promo = 'SUMMER15';
+      else if (season === 'winter') promo = 'WINTER10';
+      else if (season === 'monsoon') promo = 'MONSOON20';
+      
+      applySeasonalConfigurations(promo);
+    });
+  });
+}
+
+function applySeasonalConfigurations(promo) {
+  // Navigate to planner
+  switchView('matching-view');
+  
+  // Set the promo dropdown
+  prefPromo.value = promo;
+  
+  const today = new Date();
+  let year = today.getFullYear();
+  
+  let checkinDateStr = '';
+  let checkoutDateStr = '';
+  
+  if (promo === 'SUMMER15') {
+    checkinDateStr = `${year}-07-15`;
+    checkoutDateStr = `${year}-07-18`;
+  } else if (promo === 'WINTER10') {
+    checkinDateStr = `${year}-12-15`;
+    checkoutDateStr = `${year}-12-18`;
+  } else if (promo === 'MONSOON20') {
+    checkinDateStr = `${year}-08-15`;
+    checkoutDateStr = `${year}-08-18`;
+  } else {
+    checkinDateStr = today.toISOString().split('T')[0];
+    const nextDay = new Date();
+    nextDay.setDate(nextDay.getDate() + 2);
+    checkoutDateStr = nextDay.toISOString().split('T')[0];
+  }
+
+  prefCheckin.value = checkinDateStr;
+  prefCheckout.value = checkoutDateStr;
+  
+  calculateNightsFromDates();
+  
+  alert(`Holiday configurations applied! Promo "${promo || 'Standard Stay'}" selected and stay dates adjusted.`);
+  
+  addConciergeNotification(
+    '🛎️ Promo Offer Preconfigured',
+    `Holiday season preselection loaded. Promo code ${promo || 'none'} applied for check-in on ${checkinDateStr}.`
+  );
 }
 
 // Calculate Nights Duration from Date Range
@@ -634,25 +652,22 @@ function validatePromoCodeValidity() {
     return;
   }
   
-  const checkinMonth = new Date(checkinVal).getMonth(); // 0-indexed (0: Jan, 11: Dec)
+  const checkinMonth = new Date(checkinVal).getMonth();
   
   let isValid = true;
   let errorMsg = '';
   
   if (promo === 'SUMMER15') {
-    // Summer valid June (5), July (6), August (7)
     if (checkinMonth < 5 || checkinMonth > 7) {
       isValid = false;
       errorMsg = '⚠️ SUMMER15 is only valid for summer stays starting in June, July, or August.';
     }
   } else if (promo === 'WINTER10') {
-    // Winter valid Dec (11), Jan (0), Feb (1)
     if (checkinMonth !== 11 && checkinMonth !== 0 && checkinMonth !== 1) {
       isValid = false;
       errorMsg = '⚠️ WINTER10 is only valid for winter stays starting in December, January, or February.';
     }
   } else if (promo === 'MONSOON20') {
-    // Monsoon valid July (6), Aug (7), Sept (8)
     if (checkinMonth < 6 || checkinMonth > 8) {
       isValid = false;
       errorMsg = '⚠️ MONSOON20 is only valid for monsoon stays starting in July, August, or September.';
@@ -672,7 +687,7 @@ function validatePromoCodeValidity() {
 // Update Live Price Estimator Panel
 function updateLiveEstimator() {
   const guests = Number(prefGuests.value) || 2;
-  const nights = Number(prefNights.value) || 1;
+  const nights = Number(prefNights.value) || 2;
   const bedding = prefBeddingSelect.value;
   const pkg = prefPackage.value;
   const promo = prefPromo.value;
@@ -776,11 +791,9 @@ function addConciergeNotification(title, text) {
     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   };
   
-  // Fetch logs
   const logs = JSON.parse(localStorage.getItem('concierge_logs') || '[]');
-  logs.unshift(newNotif); // prepend
+  logs.unshift(newNotif);
   
-  // Cap at 15 logs
   if (logs.length > 15) logs.pop();
   
   localStorage.setItem('concierge_logs', JSON.stringify(logs));
@@ -806,6 +819,206 @@ function renderConciergeNotifications() {
       </div>
     `;
   }).join('');
+}
+
+// =======================================================
+// GUEST FEEDBACK & STAR RATING SYSTEM
+// =======================================================
+function setupStarRatingSystem() {
+  const stars = document.querySelectorAll('.review-star');
+  const ratingInput = document.getElementById('review-stars-val');
+  const reviewForm = document.getElementById('submit-review-form');
+  
+  if (!reviewForm) return;
+
+  stars.forEach((star, idx) => {
+    // Hover effects
+    star.addEventListener('mouseover', () => {
+      stars.forEach((s, i) => {
+        if (i <= idx) s.classList.add('hovered');
+        else s.classList.remove('hovered');
+      });
+    });
+
+    star.addEventListener('mouseout', () => {
+      stars.forEach(s => s.classList.remove('hovered'));
+    });
+
+    // Click selection
+    star.addEventListener('click', () => {
+      const selectedVal = idx + 1;
+      ratingInput.value = selectedVal;
+      stars.forEach((s, i) => {
+        if (i < selectedVal) s.classList.add('active');
+        else s.classList.remove('active');
+      });
+    });
+  });
+
+  // Handle Review Submit
+  reviewForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const comment = document.getElementById('review-text').value;
+    const starsCount = Number(ratingInput.value) || 5;
+
+    const newReview = {
+      author: currentUser.name,
+      stars: starsCount,
+      text: comment,
+      date: new Date().toLocaleDateString()
+    };
+
+    // Save to reviews local list
+    const reviews = JSON.parse(localStorage.getItem('guest_reviews') || '[]');
+    reviews.unshift(newReview);
+    localStorage.setItem('guest_reviews', JSON.stringify(reviews));
+
+    // Award 100 loyalty points via API
+    try {
+      const pointsRes = await fetch('/api/auth/add-points', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ points: 100 })
+      });
+      const pointsData = await pointsRes.json();
+      if (pointsData.success) {
+        currentUser.loyaltyPoints = pointsData.loyaltyPoints;
+      }
+    } catch (err) {
+      console.error('Error awarding points for review:', err);
+    }
+
+    alert(`Thank you for your feedback! We have posted your review and credited 100 Loyalty Points to your Club membership.`);
+    
+    addConciergeNotification(
+      '🌟 Star Review Published',
+      `Guest review submitted (${starsCount} Stars). 100 Gold Club Loyalty Points credited to user balance.`
+    );
+
+    reviewForm.reset();
+    
+    // Reset stars layout
+    stars.forEach(s => s.classList.remove('active'));
+    stars.forEach((s, i) => {
+      if (i < 5) s.classList.add('active');
+    });
+    ratingInput.value = '5';
+
+    renderReviewsWall();
+  });
+}
+
+function seedReviewsWall() {
+  const existing = localStorage.getItem('guest_reviews');
+  if (!existing) {
+    const mockReviews = [
+      {
+        author: 'Alice Vance',
+        stars: 5,
+        text: 'Unbelievable resort experience! The pool villas are breathtaking, and downloading the PDF receipt was incredibly smooth after checkout payment.',
+        date: '2026-06-29'
+      },
+      {
+        author: 'Bob Smith',
+        stars: 5,
+        text: 'StayEase Concierge was so helpful. They approved my family suite request instantly, and table booking at L\'Ambroisie fine dining was fantastic.',
+        date: '2026-06-30'
+      },
+      {
+        author: 'Charlie Brown',
+        stars: 4,
+        text: 'Loved the quiet atmosphere of the Penthouse Cabin. The mountain views and custom fireplace was cozy. Perfect check-in date matching discounts.',
+        date: '2026-07-01'
+      }
+    ];
+    localStorage.setItem('guest_reviews', JSON.stringify(mockReviews));
+  }
+}
+
+function renderReviewsWall() {
+  const listContainer = document.getElementById('reviews-wall-list');
+  if (!listContainer) return;
+
+  const reviews = JSON.parse(localStorage.getItem('guest_reviews') || '[]');
+
+  listContainer.innerHTML = reviews.map(r => {
+    const starString = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
+    return `
+      <div style="background:rgba(255,255,255,0.01); border:1px solid var(--glass-border); padding:1.25rem; border-radius:var(--radius-md); position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+          <span style="font-weight:700; color:var(--primary); font-size:1rem;">${r.author}</span>
+          <span style="font-size:0.8rem; color:var(--text-muted);">${r.date}</span>
+        </div>
+        <div style="color:var(--primary); font-size:1.15rem; letter-spacing:1px; margin-bottom:0.5rem;">${starString}</div>
+        <p style="font-size:0.9rem; color:var(--text-secondary); line-height:1.4;">${r.text}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+// =======================================================
+// SECURE STRIPE CHECKOUT FORMATTING & PREVIEW SYNC
+// =======================================================
+function setupCreditCardFormatting() {
+  const cardInput = document.getElementById('card-number');
+  const expiryInput = document.getElementById('card-expiry');
+  const cvcInput = document.getElementById('card-cvc');
+  const nameInput = document.getElementById('card-name');
+  
+  const previewNum = document.getElementById('card-preview-number');
+  const previewExpiry = document.getElementById('card-preview-expiry');
+  const previewName = document.getElementById('card-preview-name');
+  const previewBrand = document.getElementById('card-preview-brand');
+
+  if (!cardInput) return;
+
+  // Auto space credit card number
+  cardInput.addEventListener('input', (e) => {
+    let val = e.target.value.replace(/\D/g, '');
+    let formatted = '';
+    
+    for (let i = 0; i < val.length; i++) {
+      if (i > 0 && i % 4 === 0) formatted += ' ';
+      formatted += val[i];
+    }
+    
+    e.target.value = formatted;
+    previewNum.textContent = formatted || '•••• •••• •••• ••••';
+    
+    // Auto check brand logo
+    if (formatted.startsWith('4')) {
+      previewBrand.textContent = 'VISA';
+    } else if (formatted.startsWith('5')) {
+      previewBrand.textContent = 'MASTERCARD';
+    } else {
+      previewBrand.textContent = 'VISA';
+    }
+  });
+
+  // Auto slash expiry date
+  expiryInput.addEventListener('input', (e) => {
+    let val = e.target.value.replace(/\D/g, '');
+    let formatted = '';
+    
+    if (val.length > 2) {
+      formatted = val.substring(0, 2) + '/' + val.substring(2, 4);
+    } else {
+      formatted = val;
+    }
+    
+    e.target.value = formatted;
+    previewExpiry.textContent = formatted || 'MM/YY';
+  });
+
+  // Sync Cardholder name
+  nameInput.addEventListener('input', (e) => {
+    previewName.textContent = e.target.value.toUpperCase() || 'YOUR NAME';
+  });
+
+  // Restrict CVC numbers only
+  cvcInput.addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  });
 }
 
 // =======================================================
@@ -917,7 +1130,7 @@ async function loadDashboardData() {
           pendingAllocationsTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No pending booking requests.</td></tr>`;
         } else {
           pendingAllocationsTableBody.innerHTML = pending.map(a => {
-            const config = `${a.stayType.toUpperCase()} | ${a.guestsCount} Guest(s) | ${a.nights || 1} Night(s)`;
+            const config = `${a.stayType.toUpperCase()} | ${a.guestsCount} Guest(s) | ${a.nights || 2} Night(s)`;
             
             const optionsList = [];
             if (a.extraBeddingType === 'single_mattress') optionsList.push('+Single Mattress');
@@ -1261,14 +1474,13 @@ function renderRoomsGrid(rooms) {
       ? `<span class="badge badge-approved" style="background:rgba(251, 191, 36, 0.15); color:var(--primary); border-color:rgba(251, 191, 36, 0.3); font-weight: 700;">${room.matchPercentage}% Match</span>`
       : '';
 
-    // Assign realistic luxury room photos dynamically from Unsplash
-    let photoUrl = 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80'; // Standard default
+    let photoUrl = 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80';
     if (room.type === 'Deluxe Suite') {
-      photoUrl = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'; // Sunset Ocean
+      photoUrl = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80';
     } else if (room.type === 'Family Villa') {
-      photoUrl = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80'; // Pool Villa
+      photoUrl = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80';
     } else if (room.type === 'Penthouse Cabin') {
-      photoUrl = 'https://images.unsplash.com/photo-1518013431117-eb1465fa5752?auto=format&fit=crop&w=600&q=80'; // Mountains
+      photoUrl = 'https://images.unsplash.com/photo-1518013431117-eb1465fa5752?auto=format&fit=crop&w=600&q=80';
     }
 
     return `
@@ -1333,7 +1545,7 @@ window.openRequestModal = function(roomId, roomNum, price, type) {
   requestNotes.value = '';
 
   const guests = Number(prefGuests.value) || 2;
-  const nights = currentUser.transientBooking ? currentUser.transientBooking.nights : 1;
+  const nights = currentUser.transientBooking ? currentUser.transientBooking.nights : 2;
   const bedding = currentUser.transientBooking ? currentUser.transientBooking.extraBeddingType : 'none';
   const pkg = currentUser.transientBooking ? currentUser.transientBooking.vacationPackage : 'room_only';
   const promo = currentUser.transientBooking ? currentUser.transientBooking.promoCode : '';
@@ -1448,7 +1660,6 @@ async function loadPreferencesAndPlanner() {
 
   prefGuests.value = prefs.guestsCount || 2;
   
-  // Set default calendar dates if empty
   if (!prefCheckin.value) {
     const today = new Date();
     prefCheckin.value = today.toISOString().split('T')[0];
@@ -1459,15 +1670,12 @@ async function loadPreferencesAndPlanner() {
     prefCheckout.value = tomorrow.toISOString().split('T')[0];
   }
 
-  // Calculate nights
   calculateNightsFromDates();
 
-  // Setup dropdowns
   prefBeddingSelect.value = currentUser.transientBooking ? currentUser.transientBooking.extraBeddingType : 'none';
   prefPackage.value = currentUser.transientBooking ? currentUser.transientBooking.vacationPackage : 'room_only';
   prefPromo.value = currentUser.transientBooking ? currentUser.transientBooking.promoCode : '';
 
-  // Setup services checkboxes
   const addOns = prefs.addOns || [];
   prefShuttle.checked = addOns.includes('shuttle');
   prefLateCheckout.checked = addOns.includes('lateCheckout');

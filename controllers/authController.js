@@ -177,3 +177,27 @@ exports.redeemPoints = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Add loyalty points to current user (for feedback review submission)
+// @route   PUT /api/auth/add-points
+// @access  Private (Guest)
+exports.addPoints = async (req, res, next) => {
+  try {
+    const { points } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    user.loyaltyPoints = (user.loyaltyPoints || 0) + Number(points);
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      loyaltyPoints: user.loyaltyPoints
+    });
+  } catch (err) {
+    next(err);
+  }
+};
