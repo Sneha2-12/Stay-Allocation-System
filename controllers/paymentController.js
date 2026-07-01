@@ -1,6 +1,7 @@
 const Payment = require('../models/Payment');
 const Allocation = require('../models/Allocation');
 const Room = require('../models/Room');
+const User = require('../models/User');
 const { generateReceiptPDF } = require('../utils/pdfGenerator');
 
 // @desc    Process simulated payment for an approved stay booking
@@ -58,9 +59,16 @@ exports.createPayment = async (req, res, next) => {
       paidAt: Date.now()
     });
 
+    // AWARD LOYALTY BONUS POINTS (500 points)
+    const guest = await User.findById(req.user.id);
+    if (guest) {
+      guest.loyaltyPoints = (guest.loyaltyPoints || 0) + 500;
+      await guest.save();
+    }
+
     res.status(201).json({
       success: true,
-      message: 'Payment processed successfully (Simulated Stripe Integration)',
+      message: 'Payment processed successfully (Simulated Stripe Integration). You earned 500 Loyalty Bonus Points!',
       data: payment
     });
   } catch (err) {

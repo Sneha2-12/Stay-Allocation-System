@@ -27,6 +27,10 @@ const UserSchema = new mongoose.Schema({
     enum: ['guest', 'manager'],
     default: 'guest',
   },
+  loyaltyPoints: {
+    type: Number,
+    default: 2500, // Initial bonus points
+  },
   preferences: {
     stayType: {
       type: String,
@@ -44,7 +48,7 @@ const UserSchema = new mongoose.Schema({
       default: false,
     },
     addOns: {
-      type: [String], // ['breakfast', 'shuttle', 'lateCheckout']
+      type: [String],
       default: [],
     }
   },

@@ -28,6 +28,7 @@ const sendTokenResponse = (user, statusCode, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        loyaltyPoints: user.loyaltyPoints,
         preferences: user.preferences,
         allocatedRoom: user.allocatedRoom,
       },
@@ -142,6 +143,35 @@ exports.updatePreferences = async (req, res, next) => {
     res.status(200).json({
       success: true,
       user,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Redeem loyalty points for rewards
+// @route   POST /api/auth/redeem
+// @access  Private (Guest)
+exports.redeemPoints = async (req, res, next) => {
+  try {
+    const { pointsCost, rewardName } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (user.loyaltyPoints < pointsCost) {
+      return res.status(400).json({ success: false, error: 'Insufficient loyalty points balance' });
+    }
+
+    user.loyaltyPoints -= Number(pointsCost);
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      loyaltyPoints: user.loyaltyPoints,
+      message: `Successfully redeemed: ${rewardName}!`
     });
   } catch (err) {
     next(err);

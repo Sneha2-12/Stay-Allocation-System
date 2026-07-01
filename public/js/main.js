@@ -5,6 +5,7 @@ let currentUser = null;
 let roomsCache = [];
 let occupancyChartInstance = null;
 let selectedStayType = 'couple'; // Default
+let promoValidationWarning = '';
 
 // DOM Elements
 const authView = document.getElementById('auth-view');
@@ -39,6 +40,7 @@ const studentDashboard = document.getElementById('student-dashboard');
 const studentStatusGrid = document.getElementById('student-status-grid');
 const studentMainAction = document.getElementById('student-main-action');
 const studentActiveAllocation = document.getElementById('student-active-allocation');
+const conciergeNotificationsList = document.getElementById('concierge-notifications-list');
 
 // Rooms DOM
 const roomsListGrid = document.getElementById('rooms-list-grid');
@@ -52,6 +54,8 @@ const preferencesForm = document.getElementById('preferences-form');
 const stayTypeOptions = document.querySelectorAll('.stay-type-option');
 const prefGuests = document.getElementById('pref-guests');
 const prefNights = document.getElementById('pref-nights');
+const prefCheckin = document.getElementById('pref-checkin');
+const prefCheckout = document.getElementById('pref-checkout');
 const prefBeddingSelect = document.getElementById('pref-bedding-select');
 const prefPackage = document.getElementById('pref-package');
 const prefPromo = document.getElementById('pref-promo');
@@ -74,6 +78,7 @@ const estDiscountRow = document.getElementById('est-discount-row');
 const estDiscountLabel = document.getElementById('est-discount-label');
 const estDiscountPrice = document.getElementById('est-discount-price');
 const estTotalPrice = document.getElementById('est-total-price');
+const promoValidityAlert = document.getElementById('promo-validity-alert');
 
 // Payments DOM
 const paymentsTableBody = document.getElementById('payments-table-body');
@@ -100,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAuthStatus();
   setupEventListeners();
   setupStayPlannerInteractions();
+  setupPromoCardClicks();
 });
 
 // Check Authentication Status
@@ -151,6 +157,18 @@ function loginUserSession(user) {
   // Load Dashboard Data
   loadDashboardData();
   
+  // Set Default Stay Planner Calendar Dates (Today and Tomorrow)
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  prefCheckin.value = today.toISOString().split('T')[0];
+  prefCheckout.value = tomorrow.toISOString().split('T')[0];
+  prefNights.value = 1;
+
+  // Load notifications from localStorage
+  renderConciergeNotifications();
+
   // Reset Navigation to Dashboard
   switchView('dashboard-view');
 }
@@ -178,6 +196,11 @@ function switchView(viewId) {
     'dashboard-view': 'Resort Dashboard',
     'rooms-view': 'Browse Stays & Suites',
     'matching-view': 'Stay Planner & Configurator',
+    'bonus-view': 'Bonus Points & Loyalty Rewards',
+    'dine-view': 'Fine Dining & Menus',
+    'location-view': 'Estate Location & Map',
+    'about-view': 'Resort Profile',
+    'contact-view': 'Contact Concierge',
     'payments-view': 'Resort Billing Ledger'
   };
   viewTitle.textContent = titles[viewId] || 'Dashboard';
@@ -191,6 +214,8 @@ function switchView(viewId) {
     loadPayments();
   } else if (viewId === 'dashboard-view') {
     loadDashboardData();
+  } else if (viewId === 'bonus-view') {
+    updatePointsUI();
   }
 }
 
@@ -297,6 +322,12 @@ function setupEventListeners() {
     if (prefShuttle.checked) addOns.push('shuttle');
     if (prefLateCheckout.checked) addOns.push('lateCheckout');
 
+    // If promo is invalid due to dates, do not allow submission
+    if (promoValidationWarning) {
+      alert('Cannot apply promo code: ' + promoValidationWarning);
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/preferences', {
         method: 'PUT',
@@ -304,7 +335,7 @@ function setupEventListeners() {
         body: JSON.stringify({ 
           stayType: selectedStayType, 
           guestsCount, 
-          extraBedding: extraBeddingType !== 'none', // legacy compatibility
+          extraBedding: extraBeddingType !== 'none',
           addOns,
           preferences: {
             stayType: selectedStayType,
@@ -316,9 +347,7 @@ function setupEventListeners() {
       });
       const data = await res.json();
       if (data.success) {
-        // Since we also want to store these on the client local session, let's refresh User
         currentUser = data.user;
-        // Save the transient selections on currentUser for calculation in request modal
         currentUser.transientBooking = {
           extraBeddingType,
           vacationPackage,
@@ -365,7 +394,15 @@ function setupEventListeners() {
       });
       const data = await res.json();
       if (data.success) {
+        const booking = data.data;
         alert('Stay booking reservation submitted successfully!');
+        
+        // Display Concierge Notification
+        addConciergeNotification(
+          '📧 Booking Reservation Issued',
+          `Stay request submitted for Room ${booking.room ? booking.room.roomNumber : ''}. Reservation copy dispatched to ${currentUser.email}.`
+        );
+
         closeModal('request-modal');
         loadDashboardData();
       } else {
@@ -375,6 +412,22 @@ function setupEventListeners() {
       alert('Error submitting booking.');
     }
   });
+
+  // Contact Concierge Form
+  const contactForm = document.getElementById('contact-concierge-form');
+  if (contactForm) {
+    contactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const subject = document.getElementById('contact-subject').value;
+      alert(`Message regarding "${subject}" sent to concierge desk! We will reply shortly.`);
+      contactForm.reset();
+      
+      addConciergeNotification(
+        '💬 Concierge Desk Messaging',
+        `Hospitality message regarding "${subject}" successfully delivered. Concierge will reply via email.`
+      );
+    });
+  }
 
   // Manager Add Room Form
   addRoomForm.addEventListener('submit', async (e) => {
@@ -433,7 +486,18 @@ function setupEventListeners() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Payment completed successfully! Official PDF invoice generated.');
+        alert('Payment completed successfully! Official PDF invoice generated. You earned 500 Loyalty Bonus Points!');
+        
+        // Add Concierge Notifications
+        addConciergeNotification(
+          '📧 Payment Invoice Confirmed',
+          `Stay billing finalized. Paid copy of invoice and electronic room keys sent to ${currentUser.email}.`
+        );
+        addConciergeNotification(
+          '🎁 Loyalty Bonus points Credited',
+          `500 Gold Club bonus points successfully added to your loyalty balance.`
+        );
+
         closeModal('payment-modal');
         paymentCheckoutForm.reset();
         loadDashboardData();
@@ -451,14 +515,12 @@ function setupEventListeners() {
 
 // Setup Stay Planner Interactions
 function setupStayPlannerInteractions() {
-  // Stay Type Option clicks
   stayTypeOptions.forEach(opt => {
     opt.addEventListener('click', () => {
       stayTypeOptions.forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       selectedStayType = opt.getAttribute('data-type');
       
-      // Auto-set guest defaults based on type
       if (selectedStayType === 'solo') {
         prefGuests.value = '1';
       } else if (selectedStayType === 'couple') {
@@ -471,11 +533,140 @@ function setupStayPlannerInteractions() {
     });
   });
 
-  // Change inputs trigger live estimator
-  [prefGuests, prefNights, prefBeddingSelect, prefPackage, prefPromo, prefShuttle, prefLateCheckout].forEach(input => {
-    input.addEventListener('change', updateLiveEstimator);
-    input.addEventListener('input', updateLiveEstimator);
+  // Calculate nights automatically when calendars change
+  prefCheckin.addEventListener('change', calculateNightsFromDates);
+  prefCheckout.addEventListener('change', calculateNightsFromDates);
+
+  [prefGuests, prefBeddingSelect, prefPackage, prefPromo, prefShuttle, prefLateCheckout].forEach(input => {
+    input.addEventListener('change', () => {
+      validatePromoCodeValidity();
+      updateLiveEstimator();
+    });
   });
+}
+
+// Clickable seasonal promo cards Setup
+function setupPromoCardClicks() {
+  const offerCards = document.querySelectorAll('.clickable-offer');
+  offerCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const promo = card.getAttribute('data-promo');
+      
+      // Navigate to planner
+      switchView('matching-view');
+      
+      // Auto-set the promo dropdown
+      prefPromo.value = promo;
+      
+      // Auto-configure valid dates matching the promo code seasons
+      const today = new Date();
+      let year = today.getFullYear();
+      
+      let checkinDateStr = '';
+      let checkoutDateStr = '';
+      
+      if (promo === 'SUMMER15') {
+        checkinDateStr = `${year}-07-15`;
+        checkoutDateStr = `${year}-07-18`;
+      } else if (promo === 'WINTER10') {
+        checkinDateStr = `${year}-12-15`;
+        checkoutDateStr = `${year}-12-18`;
+      } else if (promo === 'MONSOON20') {
+        checkinDateStr = `${year}-08-15`;
+        checkoutDateStr = `${year}-08-18`;
+      } else {
+        // Honeymoon (all year)
+        checkinDateStr = today.toISOString().split('T')[0];
+        const nextDay = new Date();
+        nextDay.setDate(nextDay.getDate() + 2);
+        checkoutDateStr = nextDay.toISOString().split('T')[0];
+      }
+
+      prefCheckin.value = checkinDateStr;
+      prefCheckout.value = checkoutDateStr;
+      
+      calculateNightsFromDates();
+      
+      alert(`Promo offer "${promo}" applied successfully! Stays dates preconfigured for your trip.`);
+      
+      addConciergeNotification(
+        '🛎️ Promo Offer Preconfigured',
+        `Seasonal offer code ${promo} selected. Stay Planner calendar ranges customized automatically.`
+      );
+    });
+  });
+}
+
+// Calculate Nights Duration from Date Range
+function calculateNightsFromDates() {
+  const checkinVal = prefCheckin.value;
+  const checkoutVal = prefCheckout.value;
+  
+  if (checkinVal && checkoutVal) {
+    const d1 = new Date(checkinVal);
+    const d2 = new Date(checkoutVal);
+    
+    let diff = d2 - d1;
+    let nights = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    
+    if (nights < 1) {
+      nights = 1;
+      const nextDay = new Date(d1);
+      nextDay.setDate(nextDay.getDate() + 1);
+      prefCheckout.value = nextDay.toISOString().split('T')[0];
+    }
+    
+    prefNights.value = nights;
+    
+    validatePromoCodeValidity();
+    updateLiveEstimator();
+  }
+}
+
+// Validate Promo Code Validity against Stay Calendar Dates
+function validatePromoCodeValidity() {
+  const promo = prefPromo.value;
+  const checkinVal = prefCheckin.value;
+  
+  if (!promo || !checkinVal) {
+    promoValidationWarning = '';
+    promoValidityAlert.style.display = 'none';
+    return;
+  }
+  
+  const checkinMonth = new Date(checkinVal).getMonth(); // 0-indexed (0: Jan, 11: Dec)
+  
+  let isValid = true;
+  let errorMsg = '';
+  
+  if (promo === 'SUMMER15') {
+    // Summer valid June (5), July (6), August (7)
+    if (checkinMonth < 5 || checkinMonth > 7) {
+      isValid = false;
+      errorMsg = '⚠️ SUMMER15 is only valid for summer stays starting in June, July, or August.';
+    }
+  } else if (promo === 'WINTER10') {
+    // Winter valid Dec (11), Jan (0), Feb (1)
+    if (checkinMonth !== 11 && checkinMonth !== 0 && checkinMonth !== 1) {
+      isValid = false;
+      errorMsg = '⚠️ WINTER10 is only valid for winter stays starting in December, January, or February.';
+    }
+  } else if (promo === 'MONSOON20') {
+    // Monsoon valid July (6), Aug (7), Sept (8)
+    if (checkinMonth < 6 || checkinMonth > 8) {
+      isValid = false;
+      errorMsg = '⚠️ MONSOON20 is only valid for monsoon stays starting in July, August, or September.';
+    }
+  }
+  
+  if (!isValid) {
+    promoValidationWarning = errorMsg;
+    promoValidityAlert.innerHTML = errorMsg;
+    promoValidityAlert.style.display = 'block';
+  } else {
+    promoValidationWarning = '';
+    promoValidityAlert.style.display = 'none';
+  }
 }
 
 // Update Live Price Estimator Panel
@@ -486,7 +677,6 @@ function updateLiveEstimator() {
   const pkg = prefPackage.value;
   const promo = prefPromo.value;
 
-  // Average nightly rates for estimation
   const rates = { solo: 180, couple: 350, family: 550, business: 220 };
   const estRate = rates[selectedStayType] || 300;
   
@@ -514,7 +704,7 @@ function updateLiveEstimator() {
   let pkgLabelText = 'Vacation Package:';
   if (pkg === 'breakfast') {
     pkgCost = 20 * guests * nights;
-    pkgLabelText = 'Daily Breakfast:';
+    pkgLabelText = 'Breakfast Buffet:';
   } else if (pkg === 'all_inclusive') {
     pkgCost = 80 * guests * nights;
     pkgLabelText = 'All-Inclusive Pass:';
@@ -547,12 +737,14 @@ function updateLiveEstimator() {
     estCheckoutRow.style.display = 'none';
   }
 
-  // Promo Discount calculations
+  // Apply discount only if promo validation passed
   let discountPercent = 0;
-  if (promo === 'SUMMER15') discountPercent = 15;
-  else if (promo === 'WINTER10') discountPercent = 10;
-  else if (promo === 'MONSOON20') discountPercent = 20;
-  else if (promo === 'HONEYMOON' && selectedStayType === 'couple') discountPercent = 5;
+  if (!promoValidationWarning) {
+    if (promo === 'SUMMER15') discountPercent = 15;
+    else if (promo === 'WINTER10') discountPercent = 10;
+    else if (promo === 'MONSOON20') discountPercent = 20;
+    else if (promo === 'HONEYMOON' && selectedStayType === 'couple') discountPercent = 5;
+  }
 
   let totalCost = subtotal;
 
@@ -575,7 +767,120 @@ function updateLiveEstimator() {
 }
 
 // =======================================================
-// DASHBOARD LOADER
+// CONCIERGE NOTIFICATIONS DESK LOGIC
+// =======================================================
+function addConciergeNotification(title, text) {
+  const newNotif = {
+    title,
+    text,
+    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+  };
+  
+  // Fetch logs
+  const logs = JSON.parse(localStorage.getItem('concierge_logs') || '[]');
+  logs.unshift(newNotif); // prepend
+  
+  // Cap at 15 logs
+  if (logs.length > 15) logs.pop();
+  
+  localStorage.setItem('concierge_logs', JSON.stringify(logs));
+  renderConciergeNotifications();
+}
+
+function renderConciergeNotifications() {
+  if (!conciergeNotificationsList) return;
+  
+  const logs = JSON.parse(localStorage.getItem('concierge_logs') || '[]');
+  
+  if (logs.length === 0) {
+    conciergeNotificationsList.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:2rem 0;">No concierge notifications.</div>`;
+    return;
+  }
+  
+  conciergeNotificationsList.innerHTML = logs.map(l => {
+    return `
+      <div style="background:rgba(255,255,255,0.01); border-left:3px solid var(--primary); padding:0.6rem 0.75rem; border-radius:var(--radius-sm); margin-bottom:0.5rem; border-top:1px solid rgba(255,255,255,0.02); border-right:1px solid rgba(255,255,255,0.02);">
+        <div style="font-weight:700; color:var(--primary); margin-bottom:0.15rem; font-size:0.8rem;">${l.title}</div>
+        <div style="font-size:0.75rem; color:var(--text-secondary); line-height:1.3;">${l.text}</div>
+        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.25rem; text-align:right;">${l.time}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// =======================================================
+// LOYALTY POINTS / REDEEM LOGIC
+// =======================================================
+function updatePointsUI() {
+  const pointsVal = document.getElementById('bonus-points-val');
+  if (pointsVal && currentUser) {
+    pointsVal.textContent = currentUser.loyaltyPoints.toLocaleString();
+  }
+}
+
+window.redeemBonusReward = async function(cost, rewardName) {
+  if (!currentUser) return;
+  
+  if (currentUser.loyaltyPoints < cost) {
+    alert(`Insufficient loyalty points! You need ${cost} points but currently have ${currentUser.loyaltyPoints}.`);
+    return;
+  }
+  
+  if (!confirm(`Are you sure you want to redeem "${rewardName}" for ${cost} loyalty points?`)) return;
+  
+  try {
+    const res = await fetch('/api/auth/redeem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pointsCost: cost, rewardName })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      currentUser.loyaltyPoints = data.loyaltyPoints;
+      updatePointsUI();
+      
+      const voucherCode = 'SE_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      alert(`Successfully redeemed! Voucher Code: ${voucherCode}. Confirmation email dispatched.`);
+      
+      addConciergeNotification(
+        '🎁 Loyalty Reward Redeemed',
+        `Deducted ${cost} points. Reward: "${rewardName}". Voucher code issued: ${voucherCode}. sent to ${currentUser.email}.`
+      );
+    } else {
+      alert(data.error || 'Failed to redeem reward.');
+    }
+  } catch (err) {
+    alert('Error redeeming points.');
+  }
+};
+
+// =======================================================
+// DINING TABLE RESERVATIONS
+// =======================================================
+window.reserveDineTable = function(restaurantName) {
+  const time = prompt(`Enter reservation date and time for ${restaurantName} (e.g., Today at 8:00 PM):`);
+  if (!time) return;
+  
+  alert(`Dining table confirmed at ${restaurantName} for ${time}! Reservation confirmation email dispatched.`);
+  
+  addConciergeNotification(
+    '🍽️ Dining Reservation Confirmed',
+    `Table booked at "${restaurantName}" for ${time}. Details sent to ${currentUser.email}.`
+  );
+};
+
+// Modal Managers
+window.openModal = function(modalId) {
+  document.getElementById(modalId).classList.add('active');
+};
+
+window.closeModal = function(modalId) {
+  document.getElementById(modalId).classList.remove('active');
+};
+
+// =======================================================
+// DASHBOARD DATA LOADER
 // =======================================================
 async function loadDashboardData() {
   if (!currentUser) return;
@@ -615,20 +920,16 @@ async function loadDashboardData() {
             const config = `${a.stayType.toUpperCase()} | ${a.guestsCount} Guest(s) | ${a.nights || 1} Night(s)`;
             
             const optionsList = [];
-            // Bedding
             if (a.extraBeddingType === 'single_mattress') optionsList.push('+Single Mattress');
             else if (a.extraBeddingType === 'double_mattress') optionsList.push('+Double Mattress');
             else if (a.extraBeddingType === 'rollaway_bed') optionsList.push('+Rollaway Bed');
             
-            // Package
             if (a.vacationPackage === 'breakfast') optionsList.push('Breakfast Pkg');
             else if (a.vacationPackage === 'all_inclusive') optionsList.push('All-Inclusive Pkg');
 
-            // Flat services
             if (a.addOns.includes('shuttle')) optionsList.push('Shuttle');
             if (a.addOns.includes('lateCheckout')) optionsList.push('Late Checkout');
 
-            // Promo
             if (a.promoCode) optionsList.push(`Promo: ${a.promoCode}`);
 
             const optionsStr = optionsList.length > 0 ? optionsList.join(', ') : 'Room Only';
@@ -644,7 +945,7 @@ async function loadDashboardData() {
                 <td style="font-weight:700; color:var(--primary);">$${a.totalPrice.toFixed(2)}</td>
                 <td>
                   <div style="display:flex; gap:0.5rem;">
-                    <button class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--success); box-shadow:none;" onclick="handleAllocationAction('${a._id}', 'approved')">Approve</button>
+                    <button class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:var(--success); box-shadow:none; color:#000;" onclick="handleAllocationAction('${a._id}', 'approved')">Approve</button>
                     <button class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="handleAllocationAction('${a._id}', 'rejected')">Reject</button>
                   </div>
                 </td>
@@ -736,20 +1037,16 @@ async function loadDashboardData() {
           `;
 
           const optionsList = [];
-          // Bedding
           if (approvedAlloc.extraBeddingType === 'single_mattress') optionsList.push('Single Mattress Add-on');
           else if (approvedAlloc.extraBeddingType === 'double_mattress') optionsList.push('Double Mattress Add-on');
           else if (approvedAlloc.extraBeddingType === 'rollaway_bed') optionsList.push('Extra Rollaway Bed');
           
-          // Package
           if (approvedAlloc.vacationPackage === 'breakfast') optionsList.push('Breakfast Package Included');
           else if (approvedAlloc.vacationPackage === 'all_inclusive') optionsList.push('All-Inclusive Resort Package');
 
-          // Services
           if (approvedAlloc.addOns.includes('shuttle')) optionsList.push('Roundtrip Airport Shuttle');
           if (approvedAlloc.addOns.includes('lateCheckout')) optionsList.push('Late Checkout');
 
-          // Promo
           if (approvedAlloc.promoCode) optionsList.push(`Promo applied: ${approvedAlloc.promoCode} (${approvedAlloc.discountApplied}% discount)`);
 
           const optionsStr = optionsList.length > 0 ? optionsList.join('<br>• ') : 'None';
@@ -824,6 +1121,12 @@ window.cancelRequest = async function(id) {
     const data = await res.json();
     if (data.success) {
       alert('Stay reservation cancelled.');
+      
+      addConciergeNotification(
+        '🛎️ Booking Reservation Cancelled',
+        'Your stay reservation request has been cancelled by your account.'
+      );
+
       loadDashboardData();
     } else {
       alert(data.error || 'Failed to cancel reservation.');
@@ -854,7 +1157,7 @@ function renderOccupancyChart(breakdown) {
         {
           label: 'Occupied Suites/Villas',
           data: occupiedBeds,
-          backgroundColor: '#fbbf24', // Gold
+          backgroundColor: '#fbbf24',
           borderRadius: 6
         },
         {
@@ -958,9 +1261,21 @@ function renderRoomsGrid(rooms) {
       ? `<span class="badge badge-approved" style="background:rgba(251, 191, 36, 0.15); color:var(--primary); border-color:rgba(251, 191, 36, 0.3); font-weight: 700;">${room.matchPercentage}% Match</span>`
       : '';
 
+    // Assign realistic luxury room photos dynamically from Unsplash
+    let photoUrl = 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80'; // Standard default
+    if (room.type === 'Deluxe Suite') {
+      photoUrl = 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80'; // Sunset Ocean
+    } else if (room.type === 'Family Villa') {
+      photoUrl = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80'; // Pool Villa
+    } else if (room.type === 'Penthouse Cabin') {
+      photoUrl = 'https://images.unsplash.com/photo-1518013431117-eb1465fa5752?auto=format&fit=crop&w=600&q=80'; // Mountains
+    }
+
     return `
-      <div class="room-card" style="${room.matchPercentage >= 85 ? 'border-color: rgba(251, 191, 36, 0.4); box-shadow: 0 4px 15px -5px rgba(251, 191, 36, 0.15);' : ''}">
-        <div>
+      <div class="room-card" style="padding:0; overflow:hidden; ${room.matchPercentage >= 85 ? 'border-color: rgba(251, 191, 36, 0.4); box-shadow: 0 4px 15px -5px rgba(251, 191, 36, 0.15);' : ''}">
+        <img src="${photoUrl}" alt="${room.type}" style="width:100%; height:160px; object-fit:cover;">
+        
+        <div style="padding: 1.25rem;">
           <div class="room-header">
             <span class="room-number">${room.roomNumber}</span>
             <div style="text-align: right; display:flex; flex-direction:column; align-items:flex-end; gap:0.25rem;">
@@ -975,15 +1290,16 @@ function renderRoomsGrid(rooms) {
             <span class="room-info-item"><strong>Type:</strong> ${room.type}</span>
             <span class="room-info-item"><strong>Max Capacity:</strong> Up to ${room.capacity} guest(s)</span>
             
-            <div class="room-amenities">
+            <div class="room-amenities" style="margin-bottom:0.5rem;">
               ${room.amenities.map(a => `<span class="amenity-tag">${a}</span>`).join('')}
             </div>
 
             ${reasonsHtml}
           </div>
-        </div>
-        <div style="margin-top: 1rem;">
-          ${actionButtonHtml}
+          
+          <div style="margin-top: 1.25rem;">
+            ${actionButtonHtml}
+          </div>
         </div>
       </div>
     `;
@@ -1016,7 +1332,6 @@ window.openRequestModal = function(roomId, roomNum, price, type) {
   requestModalRoomDesc.innerHTML = `Confirming stay booking in <strong>Room ${roomNum} (${type})</strong>.`;
   requestNotes.value = '';
 
-  // Get config from client profile
   const guests = Number(prefGuests.value) || 2;
   const nights = currentUser.transientBooking ? currentUser.transientBooking.nights : 1;
   const bedding = currentUser.transientBooking ? currentUser.transientBooking.extraBeddingType : 'none';
@@ -1064,10 +1379,12 @@ window.openRequestModal = function(roomId, roomNum, price, type) {
 
   // Promo Discount
   let discountPercent = 0;
-  if (promo === 'SUMMER15') discountPercent = 15;
-  else if (promo === 'WINTER10') discountPercent = 10;
-  else if (promo === 'MONSOON20') discountPercent = 20;
-  else if (promo === 'HONEYMOON' && selectedStayType === 'couple') discountPercent = 5;
+  if (!promoValidationWarning) {
+    if (promo === 'SUMMER15') discountPercent = 15;
+    else if (promo === 'WINTER10') discountPercent = 10;
+    else if (promo === 'MONSOON20') discountPercent = 20;
+    else if (promo === 'HONEYMOON' && selectedStayType === 'couple') discountPercent = 5;
+  }
 
   let total = subtotal;
   if (discountPercent > 0) {
@@ -1121,7 +1438,6 @@ async function loadPreferencesAndPlanner() {
   const prefs = currentUser.preferences || {};
   selectedStayType = prefs.stayType || 'couple';
   
-  // Set active option in visual grid
   stayTypeOptions.forEach(opt => {
     if (opt.getAttribute('data-type') === selectedStayType) {
       opt.classList.add('active');
@@ -1131,8 +1447,21 @@ async function loadPreferencesAndPlanner() {
   });
 
   prefGuests.value = prefs.guestsCount || 2;
-  prefNights.value = currentUser.transientBooking ? currentUser.transientBooking.nights : 1;
   
+  // Set default calendar dates if empty
+  if (!prefCheckin.value) {
+    const today = new Date();
+    prefCheckin.value = today.toISOString().split('T')[0];
+  }
+  if (!prefCheckout.value) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 2);
+    prefCheckout.value = tomorrow.toISOString().split('T')[0];
+  }
+
+  // Calculate nights
+  calculateNightsFromDates();
+
   // Setup dropdowns
   prefBeddingSelect.value = currentUser.transientBooking ? currentUser.transientBooking.extraBeddingType : 'none';
   prefPackage.value = currentUser.transientBooking ? currentUser.transientBooking.vacationPackage : 'room_only';
