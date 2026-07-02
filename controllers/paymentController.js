@@ -4,6 +4,13 @@ const Room = require('../models/Room');
 const User = require('../models/User');
 const { generateReceiptPDF } = require('../utils/pdfGenerator');
 
+const Razorpay = require("razorpay");
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
 // @desc    Process simulated payment for an approved stay booking
 // @route   POST /api/payments
 // @access  Private (Guest only)
