@@ -171,7 +171,7 @@ const seedDB = async () => {
     const booking = await Allocation.create({
       student: alice._id,
       room: suite101._id,
-      status: 'approved',
+      status: 'confirmed',
       stayType: 'couple',
       guestsCount,
       extraBeddingType: 'none',
@@ -200,7 +200,9 @@ const seedDB = async () => {
       room: suite101._id,
       allocation: booking._id,
       amount: totalPrice,
+      currency: 'USD',
       transactionId,
+      paymentMethod: 'seeded',
       status: 'completed',
       paidAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
     });

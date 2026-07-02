@@ -1,20 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --bg-color: #020617; /* Deep Obsidian Midnight */
-  --panel-bg: rgba(15, 23, 42, 0.9); /* Opaque Slate Glass for Maximum Legibility */
+  --bg-color: #0a0f1a; /* Deep Midnight Navy */
+  --panel-bg: rgba(10, 20, 35, 0.92); /* Dark Teal Glass */
   --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --text-primary: #ffffff; /* Crisp white for headings and values */
-  --text-secondary: #e2e8f0; /* Highly readable silver slate for details */
-  --text-muted: #94a3b8; /* Muted gray-slate for labels and helper text */
-  --primary: #fbbf24; /* Champagne Gold */
-  --primary-glow: rgba(251, 191, 36, 0.2);
-  --secondary: #818cf8; /* Light Indigo (Complementary Contrast) */
-  --accent-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  --success: #10b981;
+  --glass-border: rgba(80, 200, 120, 0.12); /* Emerald-tinted borders */
+  --text-primary: #f0fdf4; /* Minty White */
+  --text-secondary: #d1fae5; /* Soft Emerald Silver */
+  --text-muted: #6ee7b7; /* Muted Emerald for labels */
+  --primary: #50c878; /* Emerald Green — money, growth, luxury */
+  --primary-glow: rgba(80, 200, 120, 0.25);
+  --secondary: #fbbf24; /* Champagne Gold accent */
+  --accent-gradient: linear-gradient(135deg, #50c878 0%, #10b981 50%, #059669 100%);
+  --success: #34d399;
   --warning: #fbbf24;
-  --danger: #f43f5e;
+  --danger: #fb7185;
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
@@ -36,8 +36,9 @@ body {
   display: flex;
   flex-direction: column; /* Prevents column wrapping page shift */
   background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.08) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(80, 200, 120, 0.12) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(251, 191, 36, 0.04) 0px, transparent 60%);
   background-attachment: fixed;
 }
 

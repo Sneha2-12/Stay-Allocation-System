@@ -20,10 +20,31 @@ const PaymentSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Please add a payment amount'],
   },
+  currency: {
+    type: String,
+    default: 'USD',
+  },
   transactionId: {
     type: String,
     required: true,
     unique: true,
+  },
+  razorpayOrderId: {
+    type: String,
+    default: null,
+  },
+  razorpayPaymentId: {
+    type: String,
+    default: null,
+  },
+  razorpaySignature: {
+    type: String,
+    default: null,
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['card', 'upi', 'netbanking', 'wallet', 'pay_on_site', 'seeded'],
+    default: 'card',
   },
   status: {
     type: String,

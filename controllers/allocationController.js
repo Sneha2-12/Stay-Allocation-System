@@ -45,15 +45,6 @@ exports.createAllocationRequest = async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'Stay/Suite not found' });
     }
 
-          room.occupied += 1;
-            await room.save();
-
-            guest.allocatedRoom = room._id;
-            await guest.save();
-
-            booking.status = "confirmed";
-            await booking.save();
-
     // Check capacity (number of guests cannot exceed room capacity)
     if (Number(guestsCount) > room.capacity) {
       return res.status(400).json({ 
@@ -204,14 +195,6 @@ exports.updateAllocationStatus = async (req, res, next) => {
         await booking.save();
         return res.status(400).json({ success: false, error: 'Guest already has an active stay allocation' });
       }
-
-      // Update room occupancy
-      room.occupied += 1;
-      await room.save();
-
-      // Update guest allocated room
-      guest.allocatedRoom = room._id;
-      await guest.save();
     }
 
     // Update booking status

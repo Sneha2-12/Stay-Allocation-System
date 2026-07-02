@@ -13,7 +13,7 @@ const AllocationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'cancelled'],
+    enum: ['pending', 'approved', 'rejected', 'cancelled', 'confirmed'],
     default: 'pending',
   },
   stayType: {
@@ -59,6 +59,10 @@ const AllocationSchema = new mongoose.Schema({
   },
   actionDate: {
     type: Date,
+  },
+  addOns: {
+    type: [String],
+    default: [],
   },
   notes: {
     type: String,

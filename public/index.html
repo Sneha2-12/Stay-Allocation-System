@@ -968,178 +968,40 @@
       <div id="payment-gateway-select-pane">
         <h3 style="margin-bottom: 0.5rem; color: var(--primary);">Choose Payment Method</h3>
         <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">
-          Select your preferred payment gateway from our real-time options below.
+          Select your preferred payment method. Online payments are processed securely via Razorpay.
         </p>
 
         <div class="gateway-grid">
-          
-          <div class="gateway-option" onclick="switchPaymentPane('card')">
+          <div class="gateway-option" onclick="initiateRazorpayCheckout()" style="grid-column: 1 / -1; cursor: pointer;">
             <span class="gateway-icon">💳</span>
-            <span class="gateway-label">Credit/Debit Card</span>
-            <span style="font-size:0.7rem; color:var(--text-muted);">Secure Stripe Gate</span>
+            <span class="gateway-label">Pay Online (Razorpay Secure)</span>
+            <span style="font-size:0.7rem; color:var(--text-muted);">Card • UPI • Net Banking • Wallet</span>
           </div>
 
-          <div class="gateway-option" onclick="switchPaymentPane('upi')">
-            <span class="gateway-icon">📱</span>
-            <span class="gateway-label">UPI Instant Pay</span>
-            <span style="font-size:0.7rem; color:var(--text-muted);">QR Scan / Virtual VPA</span>
-          </div>
-
-          <div class="gateway-option" onclick="switchPaymentPane('netbanking')">
-            <span class="gateway-icon">🏦</span>
-            <span class="gateway-label">Net Banking</span>
-            <span style="font-size:0.7rem; color:var(--text-muted);">Direct Bank Login</span>
-          </div>
-
-          <div class="gateway-option" onclick="switchPaymentPane('site')">
+          <div class="gateway-option" onclick="switchPaymentPane('site')" style="grid-column: 1 / -1; cursor: pointer;">
             <span class="gateway-icon">🏨</span>
             <span class="gateway-label">Pay on Site</span>
-            <span style="font-size:0.7rem; color:var(--text-muted);">Reserve & Pay at Front</span>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ========================================== -->
-      <!-- PANE 2: CREDIT / DEBIT CARD DETAILS        -->
-      <!-- ========================================== -->
-      <div id="payment-card-pane" style="display: none;">
-        <h3 style="margin-bottom: 1rem; color: var(--primary); display:flex; align-items:center; gap:0.5rem;">
-          <span style="cursor:pointer;" onclick="switchPaymentPane('gateway')">←</span> Credit Card checkout
-        </h3>
-
-        <!-- Interactive Simulated Card Preview -->
-        <div class="payment-card-wrapper">
-          <div class="card-brand-logo" id="card-preview-brand">VISA</div>
-          <div class="card-number-display" id="card-preview-number">•••• •••• •••• ••••</div>
-          <div class="card-meta">
-            <div>
-              <div class="card-holder-label">CARDHOLDER</div>
-              <div class="card-holder-val" id="card-preview-name">YOUR NAME</div>
-            </div>
-            <div>
-              <div class="card-expires-label">EXPIRES</div>
-              <div class="card-expires-val" id="card-preview-expiry">MM/YY</div>
-            </div>
+            <span style="font-size:0.7rem; color:var(--text-muted);">Reserve & Pay at Front Desk</span>
           </div>
         </div>
-
-        <form id="payment-checkout-form">
-          <div class="form-group">
-            <label for="card-number">Card Number</label>
-            <input type="text" id="card-number" class="form-control" placeholder="4111 2222 3333 4444" required maxlength="19">
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="card-expiry">Expiration Date</label>
-              <input type="text" id="card-expiry" class="form-control" placeholder="MM/YY" required maxlength="5">
-            </div>
-            <div class="form-group">
-              <label for="card-cvc">CVC Code</label>
-              <input type="text" id="card-cvc" class="form-control" placeholder="123" required maxlength="3">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="card-name">Cardholder Name</label>
-            <input type="text" id="card-name" class="form-control" placeholder="e.g. John Doe" required>
-          </div>
-          
-          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-            <button type="button" class="btn btn-secondary" style="width: 30%;" onclick="switchPaymentPane('gateway')">Back</button>
-            <button type="submit" class="btn btn-primary" id="pay-button" style="width: 70%;">Pay Securely Now</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- ========================================== -->
-      <!-- PANE 3: UPI INSTANT TRANSFER               -->
-      <!-- ========================================== -->
-      <div id="payment-upi-pane" style="display: none;">
-        <h3 style="margin-bottom: 1rem; color: var(--primary); display:flex; align-items:center; gap:0.5rem;">
-          <span style="cursor:pointer;" onclick="switchPaymentPane('gateway')">←</span> UPI Instant Payment
-        </h3>
         
-        <p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center;">Scan this secure QR code using GPay, PhonePe, or BHIM UPI app.</p>
-
-        <!-- CSS Animated QR scanner -->
-        <div class="qr-scanner-mockup">
-          <div class="qr-scanner-line"></div>
-          <!-- Simulated SVG QR pattern -->
-          <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#020617" stroke-width="2" style="opacity: 0.8;">
-            <path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 15h6v6h-6zM7 7h.01M17 7h.01M7 17h.01M17 17h.01M12 12h.01M12 7v5M12 17v-1" />
-          </svg>
+        <div id="razorpay-loading" style="display:none; text-align:center; padding:2rem;">
+          <div style="font-size:2rem; margin-bottom:0.5rem;">⏳</div>
+          <p style="color:var(--text-secondary); font-size:0.9rem;">Creating secure payment order...</p>
         </div>
-
-        <div style="text-align: center; color: var(--warning); font-size: 0.8rem; margin-top: -0.5rem; margin-bottom: 1.5rem; font-weight: 600;">
-          ⏳ QR session expires in 2:59 minutes
-        </div>
-
-        <form id="payment-upi-form">
-          <div class="form-group">
-            <label for="upi-vpa">Or enter Virtual Payment Address (UPI ID)</label>
-            <input type="text" id="upi-vpa" class="form-control" placeholder="e.g. guest@okaxis" required>
-          </div>
-          
-          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-            <button type="button" class="btn btn-secondary" style="width: 30%;" onclick="switchPaymentPane('gateway')">Back</button>
-            <button type="submit" class="btn btn-primary" id="upi-pay-button" style="width: 70%;">Verify & Pay UPI</button>
-          </div>
-        </form>
       </div>
 
       <!-- ========================================== -->
-      <!-- PANE 4: NET BANKING PORTAL                 -->
-      <!-- ========================================== -->
-      <div id="payment-netbanking-pane" style="display: none;">
-        <h3 style="margin-bottom: 1rem; color: var(--primary); display:flex; align-items:center; gap:0.5rem;">
-          <span style="cursor:pointer;" onclick="switchPaymentPane('gateway')">←</span> Net Banking Gateway
-        </h3>
-        
-        <form id="payment-netbanking-form">
-          <div class="form-group">
-            <label for="bank-selector">Select Your Bank</label>
-            <select id="bank-selector" class="form-control select-dropdown" required>
-              <option value="">-- Choose Bank --</option>
-              <option value="chase">Chase Bank</option>
-              <option value="bofa">Bank of America</option>
-              <option value="wells">Wells Fargo</option>
-              <option value="sbi">State Bank of India (SBI)</option>
-              <option value="hdfc">HDFC Bank Ltd</option>
-              <option value="icici">ICICI Bank</option>
-            </select>
-          </div>
-
-          <!-- Mock bank credential fields that display once bank is chosen -->
-          <div id="bank-login-fields" style="display:none; background: rgba(255,255,255,0.02); padding: 1.25rem; border-radius: var(--radius-md); border:1px solid var(--glass-border); margin: 1rem 0; animation: fadeIn 0.3s ease-out;">
-            <div style="font-weight: 700; font-size: 0.9rem; color: var(--primary); margin-bottom: 0.75rem; text-transform: uppercase;" id="selected-bank-title">Chase Secure Gateway</div>
-            <div class="form-group">
-              <label for="bank-user">Internet Banking User ID</label>
-              <input type="text" id="bank-user" class="form-control" placeholder="Bank Username" required>
-            </div>
-            <div class="form-group">
-              <label for="bank-pass">Secure password</label>
-              <input type="password" id="bank-pass" class="form-control" placeholder="••••••••" required>
-            </div>
-          </div>
-          
-          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-            <button type="button" class="btn btn-secondary" style="width: 30%;" onclick="switchPaymentPane('gateway')">Back</button>
-            <button type="submit" class="btn btn-primary" id="nb-pay-button" style="width: 70%;">Proceed to Bank Login</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- ========================================== -->
-      <!-- PANE 5: PAY ON SITE RESERVE                -->
+      <!-- PANE 2: PAY ON SITE RESERVE                -->
       <!-- ========================================== -->
       <div id="payment-site-pane" style="display: none;">
         <h3 style="margin-bottom: 1rem; color: var(--primary); display:flex; align-items:center; gap:0.5rem;">
           <span style="cursor:pointer;" onclick="switchPaymentPane('gateway')">←</span> Pay on Site Booking
         </h3>
         
-        <div style="background: rgba(251,191,36,0.05); border:1px solid rgba(251,191,36,0.2); padding: 1.5rem; border-radius: var(--radius-md); line-height: 1.5; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        <div style="background: rgba(80,200,120,0.05); border:1px solid rgba(80,200,120,0.2); padding: 1.5rem; border-radius: var(--radius-md); line-height: 1.5; font-size: 0.9rem; margin-bottom: 1.5rem;">
           <h4 style="color:var(--primary); margin-bottom:0.5rem;">🏨 Temporary Hold Policy</h4>
-          By choosing Pay on Site, your room suite reservation will be marked as <strong>Approved</strong> and locked under your guest profile. 
+          By choosing Pay on Site, your room suite reservation will be marked as <strong>Confirmed</strong> and locked under your guest profile. 
           <br><br>
           Please settle the outstanding balance of <strong style="color:var(--primary);" id="payment-site-total-val">$0.00</strong> at the resort concierge desk upon check-in.
         </div>
@@ -1153,32 +1015,11 @@
     </div>
   </div>
 
-  <!-- Modal: Request Booking -->
-  <div id="request-modal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="closeModal('request-modal')">&times;</span>
-      <h2>Book Your Stay</h2>
-      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem; margin-bottom: 1.5rem;" id="request-modal-room-desc"></p>
-      
-      <div id="booking-modal-breakdown" style="background: rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:1rem; border-radius:var(--radius-md); margin-bottom:1.5rem; font-size:0.85rem;">
-        <!-- Dynamically filled with booking breakdown -->
-      </div>
-
-      <form id="request-allocation-form">
-        <input type="hidden" id="request-room-id">
-        <div class="form-group">
-          <label for="request-notes">Special Requests / Dietary Requirements</label>
-          <textarea id="request-notes" class="form-control" rows="3" placeholder="e.g., Allergen requirements, high floor preference, early check-in, etc..."></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit Booking Reservation</button>
-      </form>
-    </div>
-  </div>
-
   <!-- Leaflet Maps Script -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <!-- Javascript Logic Files -->
-  <script src="js/payment.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

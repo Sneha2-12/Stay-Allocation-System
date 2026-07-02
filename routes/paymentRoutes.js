@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const {
-  createPayment,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  createPayOnSite,
   getPayments,
   downloadReceipt,
   getWardenAnalytics,
@@ -10,10 +12,13 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.use(protect); // Protect all payment routes
 
-router.get('/analytics', authorize('warden'), getWardenAnalytics);
+router.get('/analytics', authorize('manager'), getWardenAnalytics);
+
+router.post('/create-order', createRazorpayOrder);
+router.post('/verify', verifyRazorpayPayment);
+router.post('/pay-on-site', createPayOnSite);
 
 router.route('/')
-  .post(createPayment)
   .get(getPayments);
 
 router.get('/:id/receipt', downloadReceipt);

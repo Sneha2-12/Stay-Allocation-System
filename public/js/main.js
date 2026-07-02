@@ -100,20 +100,10 @@ const paymentModal = document.getElementById('payment-modal');
 const paymentAmountDisplay = document.getElementById('payment-amount-display');
 const paymentRoomSummary = document.getElementById('payment-room-summary');
 const paymentAllocationId = document.getElementById('payment-allocation-id');
-const paymentCheckoutForm = document.getElementById('payment-checkout-form');
 const paymentModalStepLabel = document.getElementById('payment-modal-step-label');
 
 const paymentGatewaySelectPane = document.getElementById('payment-gateway-select-pane');
-const paymentCardPane = document.getElementById('payment-card-pane');
-const paymentUpiPane = document.getElementById('payment-upi-pane');
-const paymentNetbankingPane = document.getElementById('payment-netbanking-pane');
 const paymentSitePane = document.getElementById('payment-site-pane');
-
-const paymentUpiForm = document.getElementById('payment-upi-form');
-const paymentNetbankingForm = document.getElementById('payment-netbanking-form');
-const bankSelector = document.getElementById('bank-selector');
-const bankLoginFields = document.getElementById('bank-login-fields');
-const selectedBankTitle = document.getElementById('selected-bank-title');
 
 // Thank You Overlay DOM
 const thankYouOverlay = document.getElementById('thank-you-overlay');
@@ -501,114 +491,6 @@ function setupEventListeners() {
     quickAddRoomBtn.addEventListener('click', () => openModal('add-room-modal'));
   }
 
-  // Checkout Card Form Submit
-  paymentCheckoutForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const allocationId = paymentAllocationId.value;
-    const cardNumber = document.getElementById('card-number').value;
-    const cardExpiry = document.getElementById('card-expiry').value;
-    const cardCvc = document.getElementById('card-cvc').value;
-
-    const payBtn = document.getElementById('pay-button');
-    payBtn.disabled = true;
-    payBtn.innerHTML = `Processing Securely...`;
-
-    try {
-      const res = await fetch('/api/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ allocationId, cardNumber, cardExpiry, cardCvc })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('Payment completed successfully! Official PDF invoice generated. You earned 500 Loyalty Bonus Points!');
-        finalizePaymentSuccess();
-      } else {
-        alert(data.error || 'Payment failed.');
-      }
-    } catch (err) {
-      alert('Payment processing error.');
-    } finally {
-      payBtn.disabled = false;
-      payBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pay Securely Now`;
-    }
-  });
-
-  // UPI Form Submit Handler
-  paymentUpiForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const allocationId = paymentAllocationId.value;
-    const upiId = document.getElementById('upi-vpa').value;
-    
-    const payBtn = document.getElementById('upi-pay-button');
-    payBtn.disabled = true;
-    payBtn.innerHTML = `Authorizing UPI Pay...`;
-
-    setTimeout(async () => {
-      try {
-        const res = await fetch('/api/payments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ allocationId, cardNumber: 'UPI_PAYMENT', cardExpiry: '12/99', cardCvc: '000' })
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert(`UPI Transfer of ${paymentAmountDisplay.textContent} from ${upiId} Successful!`);
-          finalizePaymentSuccess();
-        } else {
-          alert(data.error || 'UPI Authorization failed.');
-        }
-      } catch (err) {
-        alert('Error connecting to UPI gateway.');
-      } finally {
-        payBtn.disabled = false;
-        payBtn.innerHTML = `Verify & Pay UPI`;
-      }
-    }, 2000);
-  });
-
-  // Net Banking Form Submit Handler
-  paymentNetbankingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const allocationId = paymentAllocationId.value;
-    const bank = bankSelector.value;
-    
-    const payBtn = document.getElementById('nb-pay-button');
-    payBtn.disabled = true;
-    payBtn.innerHTML = `Connecting Bank Server...`;
-
-    setTimeout(async () => {
-      try {
-        const res = await fetch('/api/payments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ allocationId, cardNumber: 'NET_BANKING', cardExpiry: '12/99', cardCvc: '000' })
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert(`Internet Banking Authentication Successful via HDFC/Chase!`);
-          finalizePaymentSuccess();
-        } else {
-          alert(data.error || 'Net Banking failed.');
-        }
-      } catch (err) {
-        alert('Net Banking server timeout.');
-      } finally {
-        payBtn.disabled = false;
-        payBtn.innerHTML = `Proceed to Bank Login`;
-      }
-    }, 2500);
-  });
-
-  // Bank dropdown select updates
-  bankSelector.addEventListener('change', () => {
-    if (bankSelector.value) {
-      selectedBankTitle.textContent = `${bankSelector.options[bankSelector.selectedIndex].text} Secure Portal Login`;
-      bankLoginFields.style.display = 'block';
-    } else {
-      bankLoginFields.style.display = 'none';
-    }
-  });
 }
 
 // Finalize successful payment transitions
@@ -618,15 +500,11 @@ function finalizePaymentSuccess() {
     `Stay billing finalized. Paid copy of invoice and electronic room keys sent to ${currentUser.email}.`
   );
   addConciergeNotification(
-    '🎁 Loyalty Bonus points Credited',
+    '🎁 Loyalty Reward points Credited',
     `500 Gold Club bonus points successfully added to your loyalty balance.`
   );
 
   closeModal('payment-modal');
-  paymentCheckoutForm.reset();
-  paymentUpiForm.reset();
-  paymentNetbankingForm.reset();
-  bankLoginFields.style.display = 'none';
   loadDashboardData();
 }
 
@@ -638,64 +516,136 @@ window.submitPayOnSiteBooking = async function() {
   payBtn.disabled = true;
   payBtn.innerHTML = `Processing Site Reservation...`;
 
-  setTimeout(async () => {
-    try {
-      const res = await fetch('/api/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ allocationId, cardNumber: 'PAY_ON_SITE', cardExpiry: '12/99', cardCvc: '000' })
-      });
-      const data = await res.json();
+  try {
+    const res = await fetch('/api/payments/pay-on-site', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ allocationId })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      alert('Room reservation successfully confirmed! Settle billing charges upon arrival at resort.');
       
-      if (data.success) {
-        alert('Temporary reservation successfully locked! Settle billing charges upon arrival at resort.');
-        
-        addConciergeNotification(
-          '🏨 Room Secured (Pay on Site)',
-          `Temporary stay allocation confirmed for Room. Total due: ${paymentAmountDisplay.textContent} payable at front desk.`
-        );
-        addConciergeNotification(
-          '🎁 Loyalty Bonus points Credited',
-          `500 Gold Club bonus points successfully added to your loyalty balance.`
-        );
+      addConciergeNotification(
+        '🏨 Room Secured (Pay on Site)',
+        `Stay allocation confirmed. Total due: ${paymentAmountDisplay.textContent} payable at front desk.`
+      );
+      addConciergeNotification(
+        '🎁 Loyalty Bonus points Credited',
+        `500 Gold Club bonus points successfully added to your loyalty balance.`
+      );
 
-        closeModal('payment-modal');
-        loadDashboardData();
-      } else {
-        alert(data.error || 'Failed to lock temporary hold.');
-      }
-    } catch (err) {
-      alert('Error connecting to stay ledger.');
-    } finally {
-      payBtn.disabled = false;
-      payBtn.innerHTML = `Confirm Hold Reservation`;
+      closeModal('payment-modal');
+      loadDashboardData();
+    } else {
+      alert(data.error || 'Failed to lock hold reservation.');
     }
-  }, 2000);
+  } catch (err) {
+    alert('Error connecting to stay ledger.');
+  } finally {
+    payBtn.disabled = false;
+    payBtn.innerHTML = `Confirm Hold Reservation`;
+  }
 };
 
-// Toggle Payment Gateway Panes (Credit Card, UPI, Net Banking, Pay on Site)
+// Toggle Payment Gateway Panes
 window.switchPaymentPane = function(paneId) {
   paymentGatewaySelectPane.style.display = 'none';
-  paymentCardPane.style.display = 'none';
-  paymentUpiPane.style.display = 'none';
-  paymentNetbankingPane.style.display = 'none';
   paymentSitePane.style.display = 'none';
 
   if (paneId === 'gateway') {
     paymentGatewaySelectPane.style.display = 'block';
     paymentModalStepLabel.textContent = '➔ Payment Gateway';
-  } else if (paneId === 'card') {
-    paymentCardPane.style.display = 'block';
-    paymentModalStepLabel.textContent = '➔ Card Checkout';
-  } else if (paneId === 'upi') {
-    paymentUpiPane.style.display = 'block';
-    paymentModalStepLabel.textContent = '➔ UPI Checkout';
-  } else if (paneId === 'netbanking') {
-    paymentNetbankingPane.style.display = 'block';
-    paymentModalStepLabel.textContent = '➔ Bank Transfer';
   } else if (paneId === 'site') {
     paymentSitePane.style.display = 'block';
     paymentModalStepLabel.textContent = '➔ Reserve Room';
+  }
+};
+
+// Razorpay Checkout Integration
+window.initiateRazorpayCheckout = async function() {
+  const allocationId = paymentAllocationId.value;
+  const loadingDiv = document.getElementById('razorpay-loading');
+  const gatewayGrid = document.querySelector('.gateway-grid');
+  
+  if (loadingDiv) loadingDiv.style.display = 'block';
+  if (gatewayGrid) gatewayGrid.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/payments/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ allocationId })
+    });
+    const data = await res.json();
+    
+    if (!data.success) {
+      alert(data.error || 'Failed to initialize payment.');
+      if (loadingDiv) loadingDiv.style.display = 'none';
+      if (gatewayGrid) gatewayGrid.style.display = 'grid';
+      return;
+    }
+
+    const options = {
+      key: data.key,
+      amount: data.order.amount,
+      currency: data.order.currency,
+      name: 'StayEase Luxury Resort',
+      description: `Room Booking Payment for Suite ${data.booking.roomNumber}`,
+      order_id: data.order.id,
+      prefill: {
+        name: data.booking.guestName,
+        email: data.booking.guestEmail
+      },
+      theme: {
+        color: '#50c878' // Emerald Green
+      },
+      handler: async function (response) {
+        if (loadingDiv) {
+          loadingDiv.querySelector('p').textContent = 'Verifying payment status...';
+        }
+        
+        try {
+          const verifyRes = await fetch('/api/payments/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              allocationId: data.booking.id
+            })
+          });
+          const verifyData = await verifyRes.json();
+          
+          if (verifyData.success) {
+            alert('Payment completed and verified successfully! Official PDF invoice generated. You earned 500 Loyalty Bonus Points!');
+            finalizePaymentSuccess();
+          } else {
+            alert(verifyData.error || 'Payment verification failed.');
+          }
+        } catch (err) {
+          alert('Error verifying payment.');
+        } finally {
+          if (loadingDiv) loadingDiv.style.display = 'none';
+          if (gatewayGrid) gatewayGrid.style.display = 'grid';
+        }
+      },
+      modal: {
+        ondismiss: function() {
+          if (loadingDiv) loadingDiv.style.display = 'none';
+          if (gatewayGrid) gatewayGrid.style.display = 'grid';
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch (err) {
+    alert('Error connecting to payment gateway.');
+    if (loadingDiv) loadingDiv.style.display = 'none';
+    if (gatewayGrid) gatewayGrid.style.display = 'grid';
   }
 };
 
@@ -1392,7 +1342,7 @@ async function loadDashboardData() {
       const payRes = await fetch('/api/payments');
       const payData = await payRes.json();
 
-      let activeAlloc = allocData.data ? allocData.data.find(a => ['pending', 'approved'].includes(a.status)) : null;
+      let activeAlloc = allocData.data ? allocData.data.find(a => ['pending', 'approved', 'confirmed'].includes(a.status)) : null;
 
       if (!activeAlloc && !currentUser.allocatedRoom) {
         studentStatusGrid.innerHTML = `
@@ -1439,17 +1389,15 @@ async function loadDashboardData() {
               <button class="btn btn-danger" style="width:auto;" onclick="cancelRequest('${activeAlloc._id}')">Cancel Reservation</button>
             </div>
           `;
-        } else if (currentUser.allocatedRoom) {
-          const isPaid = payData.data && payData.data.some(p => p.room._id === currentUser.allocatedRoom._id && p.status === 'completed');
-          const approvedAlloc = allocData.data.find(a => a.room._id === currentUser.allocatedRoom._id && a.status === 'approved');
-
-          const isPayOnSite = payData.data && payData.data.some(p => p.room._id === currentUser.allocatedRoom._id && p.transactionId.startsWith('site_'));
+        } else if (activeAlloc && (activeAlloc.status === 'approved' || activeAlloc.status === 'confirmed' || currentUser.allocatedRoom)) {
+          const isPaid = activeAlloc.status === 'confirmed' || (payData.data && payData.data.some(p => p.allocation && (p.allocation._id === activeAlloc._id || p.allocation === activeAlloc._id)));
+          const isPayOnSite = payData.data && payData.data.some(p => p.allocation && (p.allocation._id === activeAlloc._id || p.allocation === activeAlloc._id) && p.paymentMethod === 'pay_on_site');
 
           allocStatusHtml = `
             <div class="stat-card">
               <span class="stat-label">Stay Allocation</span>
-              <span class="stat-value" style="color:var(--success);">ALLOCATED</span>
-              <span class="stat-desc">Room ${currentUser.allocatedRoom.roomNumber}</span>
+              <span class="stat-value" style="color:var(--success);">${isPaid ? 'ALLOCATED' : 'APPROVED'}</span>
+              <span class="stat-desc">Room ${activeAlloc.room.roomNumber}</span>
             </div>
             <div class="stat-card">
               <span class="stat-label">Payment Status</span>
@@ -1459,17 +1407,17 @@ async function loadDashboardData() {
           `;
 
           const optionsList = [];
-          if (approvedAlloc.extraBeddingType === 'single_mattress') optionsList.push('Single Mattress Add-on');
-          else if (approvedAlloc.extraBeddingType === 'double_mattress') optionsList.push('Double Mattress Add-on');
-          else if (approvedAlloc.extraBeddingType === 'rollaway_bed') optionsList.push('Extra Rollaway Bed');
+          if (activeAlloc.extraBeddingType === 'single_mattress') optionsList.push('Single Mattress Add-on');
+          else if (activeAlloc.extraBeddingType === 'double_mattress') optionsList.push('Double Mattress Add-on');
+          else if (activeAlloc.extraBeddingType === 'rollaway_bed') optionsList.push('Extra Rollaway Bed');
           
-          if (approvedAlloc.vacationPackage === 'breakfast') optionsList.push('Breakfast Package Included');
-          else if (approvedAlloc.vacationPackage === 'all_inclusive') optionsList.push('All-Inclusive Resort Package');
+          if (activeAlloc.vacationPackage === 'breakfast') optionsList.push('Breakfast Package Included');
+          else if (activeAlloc.vacationPackage === 'all_inclusive') optionsList.push('All-Inclusive Resort Package');
 
-          if (approvedAlloc.addOns.includes('shuttle')) optionsList.push('Roundtrip Airport Shuttle');
-          if (approvedAlloc.addOns.includes('lateCheckout')) optionsList.push('Late Checkout');
+          if (activeAlloc.addOns && activeAlloc.addOns.includes('shuttle')) optionsList.push('Roundtrip Airport Shuttle');
+          if (activeAlloc.addOns && activeAlloc.addOns.includes('lateCheckout')) optionsList.push('Late Checkout');
 
-          if (approvedAlloc.promoCode) optionsList.push(`Promo applied: ${approvedAlloc.promoCode} (${approvedAlloc.discountApplied}% discount)`);
+          if (activeAlloc.promoCode) optionsList.push(`Promo applied: ${activeAlloc.promoCode} (${activeAlloc.discountApplied}% discount)`);
 
           const optionsStr = optionsList.length > 0 ? optionsList.join('<br>• ') : 'None';
 
@@ -1478,11 +1426,11 @@ async function loadDashboardData() {
               <div>
                 <h2 style="color:var(--primary);">Your Stay Details</h2>
                 <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; line-height: 1.6;">
-                  <p><strong>Room / Suite:</strong> Room ${currentUser.allocatedRoom.roomNumber} (${currentUser.allocatedRoom.type})</p>
-                  <p><strong>Resort Wing:</strong> ${currentUser.allocatedRoom.resortWing}</p>
-                  <p><strong>Stay Details:</strong> ${approvedAlloc.guestsCount} Guest(s) | ${approvedAlloc.nights} Night(s)</p>
+                  <p><strong>Room / Suite:</strong> Room ${activeAlloc.room.roomNumber} (${activeAlloc.room.type})</p>
+                  <p><strong>Resort Wing:</strong> ${activeAlloc.room.resortWing}</p>
+                  <p><strong>Stay Details:</strong> ${activeAlloc.guestsCount} Guest(s) | ${activeAlloc.nights || 1} Night(s)</p>
                   <p><strong>Booking Customizations:</strong><br>• ${optionsStr}</p>
-                  <p><strong>Amenities:</strong> ${currentUser.allocatedRoom.amenities.join(', ')}</p>
+                  <p><strong>Amenities:</strong> ${activeAlloc.room.amenities.join(', ')}</p>
                 </div>
               </div>
               <div style="border-left: 1px solid var(--glass-border); padding-left: 2rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
@@ -1496,8 +1444,8 @@ async function loadDashboardData() {
                 ` : `
                   <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" style="margin-bottom: 1rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   <h3 style="margin-bottom:0.5rem; color:var(--danger);">Payment Due</h3>
-                  <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1.5rem;">Please select a gateway to settle the total charge of $${approvedAlloc.totalPrice.toFixed(2)}.</p>
-                  <button class="btn btn-primary" onclick="openPaymentPortal('${approvedAlloc._id}', '${currentUser.allocatedRoom.roomNumber}', ${approvedAlloc.totalPrice})">Select Payment Method</button>
+                  <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1.5rem;">Please select a gateway to settle the total charge of $${activeAlloc.totalPrice.toFixed(2)}.</p>
+                  <button class="btn btn-primary" onclick="openPaymentPortal('${activeAlloc._id}', '${activeAlloc.room.roomNumber}', ${activeAlloc.totalPrice})">Select Payment Method</button>
                 `}
               </div>
             </div>
@@ -1507,6 +1455,7 @@ async function loadDashboardData() {
         studentStatusGrid.innerHTML = allocStatusHtml;
         studentActiveAllocation.innerHTML = mainContentHtml;
       }
+
 
     } catch (err) {
       console.error(err);
@@ -1830,13 +1779,11 @@ window.openPaymentPortal = function(allocationId, roomNum, totalPrice) {
   paymentRoomSummary.textContent = `Room Suite-${roomNum}`;
   paymentAmountDisplay.textContent = `$${totalPrice.toFixed(2)}`;
   
-  // reset cards
-  document.getElementById('card-preview-number').textContent = '•••• •••• •••• ••••';
-  document.getElementById('card-preview-name').textContent = currentUser.name.toUpperCase();
-  document.getElementById('card-preview-expiry').textContent = 'MM/YY';
-  document.getElementById('upi-vpa').value = '';
-  bankSelector.value = '';
-  bankLoginFields.style.display = 'none';
+  // reset loadings
+  const loadingDiv = document.getElementById('razorpay-loading');
+  const gatewayGrid = document.querySelector('.gateway-grid');
+  if (loadingDiv) loadingDiv.style.display = 'none';
+  if (gatewayGrid) gatewayGrid.style.display = 'grid';
 
   // Settle Pay on site text
   const siteValLabel = document.getElementById('payment-site-total-val');

@@ -15,7 +15,7 @@ router.route('/')
   .get(getAllocations);
 
 router.route('/:id')
-  .put(authorize('warden'), updateAllocationStatus)
+  .put(authorize('manager'), updateAllocationStatus)
   .delete(cancelAllocationRequest);
 
 module.exports = router;
